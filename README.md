@@ -67,6 +67,7 @@ cd bit-bash-bonanza
 ## 🔧 Frontend Setup
 
 ```bash
+PS E:\bit-bash-bonanza\frontend\bit-bash-frontend>
 npm install
 npm run dev
 ```
@@ -76,7 +77,10 @@ npm run dev
 ## 🐍 Backend Setup
 
 ```bash
-python runner.py
+
+PS E:\bit-bash-bonanza\backend> 
+pip install flask flask-cors
+python app.py
 ```
 
 ---
