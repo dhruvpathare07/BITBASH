@@ -15,7 +15,7 @@ import Question_3_C from "./pages/c/Question_3";
 
 import Results from "./pages/Results";
 import Round2 from "./pages/Round2";
-import BlindCoding from "./pages/blindcoding";
+import LogicMaze from "./pages/LogicMaze";
 
 function App() {
   return (
@@ -61,10 +61,10 @@ function App() {
         <Route
           path="/round-2"
           element={<RequirePlayer><Round2 /></RequirePlayer>}
-        />
+        />  
         <Route
-          path="/blind-coding"
-          element={<RequirePlayer><BlindCoding /></RequirePlayer>}
+          path="/logic-maze"
+          element={<RequirePlayer><LogicMaze /></RequirePlayer>}
         />
       </Routes>
     </BrowserRouter>

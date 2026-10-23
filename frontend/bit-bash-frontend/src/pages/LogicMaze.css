@@ -1,0 +1,545 @@
+
+.logic-maze-page {
+  --bg: #080d19;
+  --panel: #111a2b;
+  --border: rgba(151, 174, 216, 0.18);
+  --text: #f2f5ff;
+  --muted: #98a7c2;
+  --purple: #ad91ff;
+  --cyan: #5be5ff;
+  --green: #4ce2aa;
+
+  box-sizing: border-box;
+  min-height: 100vh;
+  padding: 18px clamp(14px, 3vw, 40px) 24px;
+  color: var(--text);
+  background:
+    radial-gradient(ellipse at 15% 0%, rgba(112, 79, 232, .12), transparent 38%),
+    radial-gradient(ellipse at 90% 35%, rgba(38, 181, 219, .07), transparent 34%),
+    var(--bg);
+  font-family: Inter, "Segoe UI", Arial, sans-serif;
+}
+
+.logic-maze-page *,
+.logic-maze-page *::before,
+.logic-maze-page *::after {
+  box-sizing: border-box;
+}
+
+.logic-maze-header,
+.logic-maze-progress,
+.logic-maze-content,
+.logic-maze-footer {
+  width: 100%;
+  max-width: 1240px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.logic-maze-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 22px;
+  margin-bottom: 16px;
+}
+
+.logic-maze-brand {
+  min-width: 0;
+}
+
+.logic-maze-eyebrow {
+  color: var(--cyan);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1.7px;
+  text-transform: uppercase;
+}
+
+.logic-maze-brand h1 {
+  margin: 6px 0;
+  font-size: clamp(27px, 3vw, 38px);
+  font-weight: 850;
+  line-height: 1.12;
+  letter-spacing: -1px;
+}
+
+.logic-maze-brand h1 span {
+  color: var(--purple);
+}
+
+.logic-maze-brand p {
+  margin: 6px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.logic-maze-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(85px, 1fr));
+  gap: 8px;
+  width: min(660px, 62%);
+}
+
+.logic-maze-stat {
+  min-width: 0;
+  padding: 11px 12px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: rgba(17, 26, 43, .78);
+}
+
+.logic-maze-stat small {
+  display: block;
+  margin-bottom: 5px;
+  color: var(--muted);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 1px;
+}
+
+.logic-maze-stat strong {
+  display: block;
+  overflow: hidden;
+  font-size: 14px;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.logic-maze-stat em {
+  margin-left: 3px;
+  color: var(--muted);
+  font-size: 10px;
+  font-style: normal;
+}
+
+.logic-maze-warning {
+  color: #ff8293 !important;
+}
+
+.logic-maze-progress {
+  margin-bottom: 13px;
+}
+
+.logic-maze-progress-label {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 7px;
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .8px;
+}
+
+.logic-maze-progress-track {
+  height: 4px;
+  overflow: hidden;
+  border-radius: 8px;
+  background: #202b42;
+}
+
+.logic-maze-progress-fill {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--purple), var(--cyan));
+  transition: width .25s ease;
+}
+
+.logic-maze-content {
+  display: flex;
+  flex-direction: column;
+  gap: 13px;
+}
+
+.logic-maze-question-card,
+.logic-maze-game-card {
+  min-width: 0;
+  border: 1px solid var(--border);
+  border-radius: 15px;
+  background: linear-gradient(145deg, rgba(19, 29, 48, .97), rgba(12, 19, 33, .98));
+}
+
+.logic-maze-question-card {
+  padding: 17px 21px;
+}
+
+.logic-maze-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+  color: var(--cyan);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1px;
+}
+
+.logic-maze-points {
+  padding: 6px 9px;
+  border: 1px solid rgba(76, 226, 170, .24);
+  border-radius: 7px;
+  color: var(--green);
+  background: rgba(76, 226, 170, .07);
+  white-space: nowrap;
+}
+
+.logic-maze-question-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+}
+
+.logic-maze-question-heading h2 {
+  margin: 0;
+  font-size: clamp(20px, 2vw, 25px);
+  letter-spacing: -.5px;
+}
+
+.logic-maze-question-heading p {
+  margin: 6px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.logic-maze-question-number {
+  flex-shrink: 0;
+  color: rgba(173, 145, 255, .35);
+  font-size: 43px;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.logic-maze-code {
+  max-width: 100%;
+  max-height: 170px;
+  margin: 12px 0;
+  padding: 12px 15px;
+  overflow: auto;
+  border: 1px solid rgba(173, 145, 255, .18);
+  border-left: 3px solid var(--purple);
+  border-radius: 8px;
+  background: #090f1c;
+  color: #dce7ff;
+  font-family: "Cascadia Code", Consolas, monospace;
+  font-size: 12px;
+  line-height: 1.55;
+  tab-size: 4;
+  white-space: pre;
+}
+
+.logic-maze-code code {
+  color: inherit;
+  font-family: inherit;
+}
+
+.logic-maze-options {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.logic-maze-option {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+  min-height: 40px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, .025);
+}
+
+.logic-maze-option > span {
+  display: grid;
+  flex: 0 0 23px;
+  width: 23px;
+  height: 23px;
+  place-items: center;
+  border: 1px solid rgba(173, 145, 255, .35);
+  border-radius: 6px;
+  background: rgba(173, 145, 255, .1);
+  color: #d0c1ff;
+  font-size: 10px;
+  font-weight: 900;
+}
+
+.logic-maze-option code {
+  overflow-wrap: anywhere;
+  color: #e1eaff;
+  font-family: "Cascadia Code", Consolas, monospace;
+  font-size: 11px;
+}
+
+.logic-maze-feedback {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  margin-top: 10px;
+  padding: 9px 11px;
+  border: 1px solid rgba(91, 229, 255, .14);
+  border-radius: 8px;
+  background: rgba(91, 229, 255, .04);
+  color: #bdcce5;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.logic-maze-feedback-icon {
+  color: var(--cyan);
+  font-weight: 900;
+}
+
+.logic-maze-feedback.is-correct {
+  border-color: rgba(76, 226, 170, .22);
+  color: #baf7df;
+  background: rgba(76, 226, 170, .05);
+}
+
+.logic-maze-game-card {
+  padding: 14px 18px 12px;
+}
+
+.logic-maze-game-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.logic-maze-game-heading > div {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.logic-maze-game-heading strong {
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 1.2px;
+}
+
+.logic-maze-game-heading > span {
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.logic-maze-live-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 10px rgba(76, 226, 170, .6);
+  animation: logicMazePulse 1.8s infinite;
+}
+
+@keyframes logicMazePulse {
+  50% { opacity: .45; }
+}
+
+.logic-maze-endpoint-legend {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 9px;
+}
+
+.logic-maze-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  padding: 7px 9px;
+  border-bottom: 1px solid var(--border);
+  background: rgba(255, 255, 255, .02);
+}
+
+.logic-maze-legend-item b {
+  display: grid;
+  flex: 0 0 24px;
+  width: 24px;
+  height: 24px;
+  place-items: center;
+  border-radius: 6px;
+  background: rgba(173, 145, 255, .12);
+  color: #d0c1ff;
+  font-size: 10px;
+}
+
+.logic-maze-legend-item span {
+  overflow-wrap: anywhere;
+  color: #dbe5fa;
+  font-family: "Cascadia Code", Consolas, monospace;
+  font-size: 10px;
+}
+
+.logic-maze-game-footer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 9px;
+  padding-top: 9px;
+  border-top: 1px solid var(--border);
+  color: var(--muted);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: .5px;
+}
+
+.logic-maze-footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 13px;
+  color: #7585a4;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: .6px;
+}
+
+.logic-maze-finish {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: min(560px, 100%);
+  min-height: 360px;
+  margin: 6vh auto;
+  padding: 32px 24px;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: linear-gradient(145deg, #172239, #0e1627);
+  text-align: center;
+}
+
+.logic-maze-finish h1 {
+  margin: 16px 0;
+  font-size: clamp(27px, 4vw, 38px);
+}
+
+.logic-maze-final-score {
+  color: var(--green);
+  font-size: 65px;
+  font-weight: 900;
+}
+
+.logic-maze-final-score span {
+  color: var(--muted);
+  font-size: 21px;
+}
+
+.logic-maze-finish p {
+  color: #c1cce0;
+  line-height: 1.6;
+}
+
+.logic-maze-muted {
+  color: var(--muted) !important;
+}
+
+.logic-maze-finish-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.logic-maze-primary,
+.logic-maze-secondary {
+  min-height: 42px;
+  padding: 10px 17px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.logic-maze-primary {
+  background: linear-gradient(100deg, #b29aff, #72dfff);
+  color: #0b1020;
+}
+
+.logic-maze-secondary {
+  border-color: var(--border);
+  background: #172339;
+  color: var(--text);
+}
+
+@media (max-width: 900px) {
+  .logic-maze-header {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .logic-maze-stats {
+    width: 100%;
+  }
+}
+
+@media (max-width: 600px) {
+  .logic-maze-page {
+    padding: 15px 10px 20px;
+  }
+
+  .logic-maze-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .logic-maze-question-card {
+    padding: 13px;
+  }
+
+  .logic-maze-question-number {
+    font-size: 34px;
+  }
+
+  .logic-maze-options,
+  .logic-maze-endpoint-legend {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .logic-maze-game-card {
+    padding: 11px;
+  }
+
+  .logic-maze-game-heading > span {
+    font-size: 9px;
+    text-align: right;
+  }
+
+  .logic-maze-footer {
+    flex-direction: column;
+    line-height: 1.5;
+  }
+
+  .logic-maze-finish-actions {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .logic-maze-primary,
+  .logic-maze-secondary {
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .logic-maze-page *,
+  .logic-maze-page *::before,
+  .logic-maze-page *::after {
+    animation-duration: .01ms !important;
+    transition-duration: .01ms !important;
+  }
+}

@@ -6,8 +6,8 @@ const Round2 = () => {
   const navigate = useNavigate();
 
   const handleStart = () => {
-    navigate('/blind-coding');
-  };
+  navigate("/logic-maze");
+};
 
   return (
     <div className="welcome-container">
@@ -28,7 +28,7 @@ const Round2 = () => {
           <div className="welcome-content">
             <span className="year-badge">Round - 2</span>
             <h1 className="title">Bit Bash Bonanza</h1>
-            <p className="subtitle">Blind Coding</p>
+            <p className="subtitle">Logic Maze</p>
 
             <div style={{ marginTop: 30 }}>
               <button className="lang-btn python" onClick={handleStart}>

@@ -1,0 +1,138 @@
+
+.maze-board {
+  width: 100%;
+  max-width: 930px;
+  min-width: 0;
+  margin: 0 auto;
+}
+
+.maze-board-canvas {
+  width: 100%;
+  max-height: 58vh;
+  overflow: hidden;
+  border: 0;
+  border-radius: 4px;
+  background: #080d1b;
+  box-shadow: 0 0 28px rgba(109, 89, 255, 0.08);
+}
+
+.maze-board-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 58vh;
+  outline: none;
+}
+
+.maze-board-player {
+  transition: transform 110ms linear;
+}
+
+.maze-board-exit {
+  transition: opacity 160ms ease;
+}
+
+.maze-board-exit:hover {
+  opacity: 0.8;
+}
+
+.maze-board-status {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  min-height: 28px;
+  margin-top: 8px;
+  color: #aab8d5;
+  font-size: 12px;
+  text-align: center;
+}
+
+.maze-board-status-dot {
+  width: 7px;
+  height: 7px;
+  flex: 0 0 7px;
+  border-radius: 50%;
+  background: #53e4ad;
+  box-shadow: 0 0 9px rgba(83, 228, 173, 0.55);
+}
+
+.maze-board-error {
+  color: #ff9ca9;
+  text-align: center;
+}
+
+/* Keyboard alternatives for touchscreens and users who prefer buttons. */
+.maze-board-controls {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  margin-top: 10px;
+}
+
+.maze-board-controls button {
+  display: grid;
+  width: 38px;
+  height: 34px;
+  place-items: center;
+  border: 1px solid rgba(158, 139, 255, 0.35);
+  border-radius: 8px;
+  background: rgba(25, 31, 57, 0.92);
+  color: #f0eaff;
+  font-size: 18px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: background 150ms ease, border-color 150ms ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.maze-board-controls button:hover:not(:disabled) {
+  border-color: #c3a8ff;
+  background: #30294e;
+}
+
+.maze-board-controls button:active:not(:disabled) {
+  background: #41335f;
+}
+
+.maze-board-controls button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.maze-board-controls-row {
+  display: flex;
+  gap: 5px;
+}
+
+.maze-board-controls p {
+  margin: 4px 0 0;
+  color: #7888aa;
+  font-size: 10px;
+  text-align: center;
+}
+
+@media (max-width: 600px) {
+  .maze-board-canvas,
+  .maze-board-svg {
+    max-height: 48vh;
+  }
+
+  .maze-board-controls button {
+    width: 36px;
+    height: 32px;
+  }
+
+  .maze-board-status {
+    font-size: 11px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .maze-board-player,
+  .maze-board-exit,
+  .maze-board-controls button {
+    transition: none;
+  }
+}
