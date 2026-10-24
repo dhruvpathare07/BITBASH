@@ -13,10 +13,6 @@ import { initProgress, getProgress } from "../utils/progress";
 import { completeQuestion } from "../utils/progress";
 import { useRef } from "react";
 
-// Round 1: flat marks for each correctly debugged question (3 questions = 30 marks)
-const ASSEMBLY_POINTS = 50; // 1st sub-question: assemble the code
-const DEBUG_POINTS = 50;    // 2nd sub-question: fix the bugs
-
 export default function Question_1() {
   // GAME STATE
   const [phase, setPhase] = useState("wheel"); // wheel | topic | assembly | debug
@@ -30,10 +26,12 @@ export default function Question_1() {
   const playerProfile = JSON.parse(sessionStorage.getItem("playerProfile")) || {};
   const [isLocked, setIsLocked] = useState(false);
 
-  const [questionSolved, setQuestionSolved] = useState(false);
+  const [assemblyScore, setAssemblyScore] = useState(0);
+  const [debugScore, setDebugScore] = useState(0);
+  const [timeBonus, setTimeBonus] = useState(0);
   const [currentTimeLeft, setCurrentTimeLeft] = useState(600);
   
-  const totalScore = (assemblyCompleted ? ASSEMBLY_POINTS : 0) + (questionSolved ? DEBUG_POINTS : 0);
+  const totalScore = assemblyScore + debugScore + timeBonus;
 
   const timerRef = useRef(null);
 
@@ -198,6 +196,7 @@ useEffect(() => {
 
 
   const unlockDebug = () => {
+  setAssemblyScore(50);
   setAssemblyCompleted(true);
 };
 
@@ -421,16 +420,36 @@ if (isLocked) {
 
 <DebugSection
   topic={selectedTopic}
-  onScoreChange={() => {}}
-  onSuccess={() => {
-                timerRef.current?.stop();
-                setQuestionSolved(true);
-                finishQuestion(ASSEMBLY_POINTS + DEBUG_POINTS);
-              }}
-              onGiveUp={() => {
-                timerRef.current?.stop();
-                finishQuestion(ASSEMBLY_POINTS);
-              }}
+  onScoreChange={setDebugScore}
+  onSuccess={(finalDebugScore) => {
+  timerRef.current?.stop();
+
+  let bonus = 0;
+
+  if (finalDebugScore === 100 && currentTimeLeft > 0) {
+    bonus = 50;
+    setTimeBonus(50);
+  }
+
+  const finalScore =
+  Number(assemblyScore) +
+  Number(finalDebugScore) +
+  Number(bonus);
+
+  finishQuestion(finalScore);
+}}
+
+
+
+  onGiveUp={() => {
+    timerRef.current?.stop();
+
+    const finalScore =
+      Number(assemblyScore) +
+      Number(debugScore);
+
+    finishQuestion(finalScore);
+  }}
 
 
 />
@@ -506,3 +525,4 @@ onClick={() => finishQuestion()}
     </div>
   );
 }
+ 

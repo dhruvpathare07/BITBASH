@@ -132,9 +132,9 @@ const avatars = [
 
 
   const getTitle = () => {
-  if (totalScore >= 270) return "👑 Debugger God";
-  if (totalScore >= 225) return "🧙 Code Wizard";
-  if (totalScore >= 180) return "⚡ Bug Hunter";
+  if (totalScore >= 450) return "👑 Debugger God";
+  if (totalScore >= 340) return "🧙 Code Wizard";
+  if (totalScore >= 230) return "⚡ Bug Hunter";
   if (totalScore >= 120) return "💻 Syntax Soldier";
   return "🐣 Rookie Coder";
 };
@@ -312,7 +312,7 @@ const handleDownloadPDF = async () => {
           <div className="summary-boxes">
             <div className="summary-box total-score">
               <span className="summary-label">TOTAL SCORE :</span>
-              <span className="summary-value">{animatedScore} / 300</span>
+              <span className="summary-value">{animatedScore}</span>
 
             </div>
             <div className="summary-box total-time">
@@ -373,7 +373,7 @@ const handleDownloadPDF = async () => {
             <div className="result-modal-stats">
               <div className="result-stat">
                 <span className="result-stat-label">Your Score</span>
-                <span className="result-stat-value">{totalScore} / 300</span>
+                <span className="result-stat-value">{totalScore} / 800</span>
               </div>
               <div className="result-stat">
                 <span className="result-stat-label">Time Taken</span>
@@ -472,7 +472,7 @@ const handleDownloadPDF = async () => {
       <div className="summary-boxes">
         <div className="summary-box total-score">
           <span className="summary-label">TOTAL SCORE :</span>
-          <span className="summary-value">{totalScore} / 300</span>
+          <span className="summary-value">{totalScore}</span>
         </div>
 
         <div className="summary-box total-time">
