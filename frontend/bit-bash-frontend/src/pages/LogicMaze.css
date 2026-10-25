@@ -543,3 +543,108 @@
     transition-duration: .01ms !important;
   }
 }
+.logic-maze-next {
+  display: block;
+  width: 100%;
+  margin-top: 18px;
+  padding: 14px 20px;
+  font-size: 14px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.logic-maze-next:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 20px rgba(114, 223, 255, 0.2);
+}
+.logic-maze-back {
+  margin-bottom: 16px;
+  padding: 10px 16px;
+  font-size: 13px;
+}
+
+
+.logic-maze-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.logic-maze-content {
+  flex: 1;
+}
+
+.logic-maze-question-card {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding: 22px;
+}
+.logic-maze-code {
+  min-height: 150px;
+}
+
+
+.logic-maze-next {
+  display: block;
+  width: 100%;
+  margin-top: auto;
+  padding: 16px 20px;
+}
+
+.logic-maze-footer {
+  margin-top: 20px;
+}
+
+@media (max-width: 600px) {
+  .logic-maze-question-card {
+    min-height: auto;
+  }
+
+  .logic-maze-code {
+    min-height: 120px;
+  }
+}
+
+.logic-maze-result-stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px 16px;
+  margin: 24px 0;
+  text-align: center;
+}
+
+.logic-maze-result-stats > div {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 14px 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.logic-maze-result-stats strong {
+  font-size: 22px;
+}
+
+.logic-maze-result-stats span {
+  font-size: 13px;
+  color: #b8c7e6;
+}
+
+.logic-maze-finish {
+  width: min(680px, calc(100% - 32px));
+  box-sizing: border-box;
+  padding: 32px;
+}
+
+@media (max-width: 480px) {
+  .logic-maze-result-stats {
+    gap: 12px;
+  }
+
+  .logic-maze-finish {
+    padding: 24px 18px;
+  }
+}

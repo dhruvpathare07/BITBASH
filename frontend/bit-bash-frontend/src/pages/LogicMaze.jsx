@@ -31,12 +31,15 @@ export default function LogicMaze() {
   const questions = LOGIC_MAZE_QUESTIONS[language];
 
   const [questionIndex, setQuestionIndex] = useState(0);
+  const [view, setView] = useState("question");
   const [score, setScore] = useState(0);
   const [timeLeft, setTimeLeft] = useState(ROUND_SECONDS);
   const [status, setStatus] = useState("playing");
   const [feedback, setFeedback] = useState(
-    "Trace the code, then navigate to its correct output."
-  );
+  language === "c"
+    ? "Predict the output, then click Next to enter the maze."
+    : "Trace the code, then navigate to its correct output."
+);
   const [locked, setLocked] = useState(false);
   const [attempts, setAttempts] = useState(0);
   const [boardResetKey, setBoardResetKey] = useState(0);
@@ -123,13 +126,14 @@ export default function LogicMaze() {
           if (questionIndex === questions.length - 1) {
             setStatus("completed");
           } else {
-            setQuestionIndex((currentIndex) => currentIndex + 1);
-            setBoardResetKey((key) => key + 1);
-            setFeedback(
-              "Correct! The next challenge is ready. Trace the new code."
-            );
-            setLocked(false);
-          }
+  setQuestionIndex((currentIndex) => currentIndex + 1);
+  setBoardResetKey((key) => key + 1);
+  setView("question");
+  setFeedback(
+    "Correct! The next challenge is ready. Trace the new code."
+  );
+  setLocked(false);
+}
         }, 850);
       } else {
         setFeedback(
@@ -143,24 +147,24 @@ export default function LogicMaze() {
         }, 850);
       }
     },
-    [locked, status, question, questionIndex, questions.length]
+    [locked, status, question, questionIndex, questions.length, language]
   );
 
   const restart = () => {
-    if (transitionRef.current) {
-      window.clearTimeout(transitionRef.current);
-    }
+  if (transitionRef.current) {
+    window.clearTimeout(transitionRef.current);
+  }
 
-    setQuestionIndex(0);
-    setScore(0);
-    setTimeLeft(ROUND_SECONDS);
-    setStatus("playing");
-    setFeedback("Trace the code, then navigate to its correct output.");
-    setLocked(false);
-    setAttempts(0);
-    setBoardResetKey((key) => key + 1);
-  };
-
+  setQuestionIndex(0);
+setView("question");
+  setScore(0);
+  setTimeLeft(ROUND_SECONDS);
+  setStatus("playing");
+  setFeedback("Trace the code, then navigate to its correct output.");
+  setLocked(false);
+  setAttempts(0);
+  setBoardResetKey((key) => key + 1);
+};
   const formatTime = (seconds) =>
     `${String(Math.floor(seconds / 60)).padStart(2, "0")}:${String(
       seconds % 60
@@ -186,47 +190,81 @@ export default function LogicMaze() {
     );
   }
 
-  if (status !== "playing") {
-    const completed = status === "completed";
+  
+if (status !== "playing") {
+  const completed = status === "completed";
+  const timeUsed = ROUND_SECONDS - timeLeft;
+  const formatResultTime = (seconds) =>
+    `${String(Math.floor(seconds / 60)).padStart(2, "0")}:${String(
+      seconds % 60
+    ).padStart(2, "0")}`;
 
-    return (
-      <main className="logic-maze-page">
-        <section className="logic-maze-finish">
-          <div className="logic-maze-eyebrow">
-            BIT BASH BONANZA · ROUND 2
+  return (
+    <main className="logic-maze-page">
+      <section className="logic-maze-finish">
+        <div className="logic-maze-eyebrow">
+          BIT BASH BONANZA · ROUND 2
+        </div>
+
+        <h1>{completed ? "Maze Run Complete!" : "Time's Up!"}</h1>
+
+        <p>
+          {completed
+            ? "Amazing work! You completed all the challenges."
+            : "Your time has ended. Here's how you performed."}
+        </p>
+
+        <p className="logic-maze-muted">
+          Player: {profile.fullName || profile.username || "Player"}
+          {" · "}
+          Language: {language.toUpperCase()}
+        </p>
+
+        <div className="logic-maze-final-score">
+          {score}
+          <span> / 100</span>
+        </div>
+
+        <p><strong>Final Score</strong></p>
+
+        <div className="logic-maze-result-stats">
+          <div>
+            <strong>{score / 10} / {questions.length}</strong>
+            <span>Correct Answers</span>
           </div>
 
-          <h1>{completed ? "Maze Run Complete!" : "Time's Up!"}</h1>
-
-          <div className="logic-maze-final-score">
-            {score}
-            <span> / 100</span>
+          <div>
+            <strong>{attempts}</strong>
+            <span>Total Attempts</span>
           </div>
 
-          <p>
-            You completed {score / 10} of {questions.length} challenges.
-          </p>
-
-          <p className="logic-maze-muted">
-            Language locked: {language.toUpperCase()}
-          </p>
-
-          <div className="logic-maze-finish-actions">
-            <button className="logic-maze-primary" onClick={restart}>
-              Play Again
-            </button>
-
-            <button
-              className="logic-maze-secondary"
-              onClick={() => navigate("/results")}
-            >
-              Return to Results
-            </button>
+          <div>
+            <strong>{formatResultTime(timeUsed)}</strong>
+            <span>Time Used</span>
           </div>
-        </section>
-      </main>
-    );
-  }
+
+          <div>
+            <strong>{formatResultTime(timeLeft)}</strong>
+            <span>Time Remaining</span>
+          </div>
+        </div>
+
+        <div className="logic-maze-finish-actions">
+          <button className="logic-maze-primary" onClick={restart}>
+            Play Again
+          </button>
+
+          <button
+            className="logic-maze-secondary"
+            onClick={() => navigate("/")}
+          >
+            Back to Home
+          </button>
+        </div>
+      </section>
+    </main>
+  );
+}
 
   return (
     <main className="logic-maze-page">
@@ -294,7 +332,9 @@ export default function LogicMaze() {
 
       <div className="logic-maze-content">
         {/* QUESTION FIRST */}
-        <section className="logic-maze-question-card">
+       {view === "question" && (
+  <section className="logic-maze-question-card">
+    
           <div className="logic-maze-card-top">
             <span>YOUR CODING CHALLENGE</span>
             <span className="logic-maze-points">+10 POINTS</span>
@@ -304,9 +344,10 @@ export default function LogicMaze() {
             <div>
               <h2>Predict the output</h2>
               <p>
-                Read the code carefully, then guide your character through
-                the maze to the matching output.
-              </p>
+  {language === "c"
+    ? "Read the C code carefully and predict its output."
+    : "Read the code carefully, then guide your character through the maze to the matching output."}
+</p>
             </div>
 
             <div className="logic-maze-question-number">
@@ -318,70 +359,83 @@ export default function LogicMaze() {
             <code>{question.code}</code>
           </pre>
 
-          <div className="logic-maze-options">
-            {question.options.map((option, index) => (
-              <div
-                className="logic-maze-option"
-                key={`${LETTERS[index]}-${option}`}
-              >
-                <span>{LETTERS[index]}</span>
-                <code>{option}</code>
+          
+          
+<div
+  className={`logic-maze-feedback ${
+    feedback.startsWith("Correct") ? "is-correct" : ""
+  }`}
+  aria-live="polite"
+>
+  <span className="logic-maze-feedback-icon">
+    {feedback.startsWith("Correct") ? "✓" : "↳"}
+  </span>
+  <span>{feedback}</span>
+</div>
+
+{view === "question" && (
+  <button
+    type="button"
+    className="logic-maze-primary logic-maze-next"
+    onClick={() => setView("maze")}
+  >
+    Next: Enter the Maze →
+  </button>
+)}        </section>
+        )}
+
+        {/* MAZE — shown on the maze screen */}
+       <section
+  className="logic-maze-game-card"
+  style={{ display: view === "maze" ? "block" : "none" }}
+>
+            <div className="logic-maze-game-heading">
+              <div>
+                <span className="logic-maze-live-dot" />
+                <strong>MAZE ZONE</strong>
               </div>
-            ))}
-          </div>
+              <span className="logic-maze-game-hint">
+                START <span>→</span> FIND THE CORRECT EXIT
+              </span>
+            </div>
+          {view === "maze" && (
+  <button
+    type="button"
+    className="logic-maze-secondary logic-maze-back"
+    onClick={() => setView("question")}
+  >
+    ← Back to Question
+  </button>
+)}
 
-          <div
-            className={`logic-maze-feedback ${
-              feedback.startsWith("Correct") ? "is-correct" : ""
-            }`}
-            aria-live="polite"
-          >
-            <span className="logic-maze-feedback-icon">
-              {feedback.startsWith("Correct") ? "✓" : "↳"}
-            </span>
-            <span>{feedback}</span>
-          </div>
-        </section>
+            <MazeBoard
+              key={`${maze.id || questionIndex}-${boardResetKey}`}
+              maze={maze}
+              question={question}
+              onEndpoint={onEndpoint}
+              disabled={locked || status !== "playing"}
+            />
 
-        {/* WIDE MAZE BELOW THE QUESTION */}
-        <section className="logic-maze-game-card">
-          <div className="logic-maze-game-heading">
-            <div>
-              <span className="logic-maze-live-dot" />
-              <strong>MAZE ZONE</strong>
+            <div className="logic-maze-endpoint-legend">
+              {question.options.map((option, index) => (
+                <div
+                  className="logic-maze-legend-item"
+                  key={`${LETTERS[index]}-${option}`}
+                >
+                  <b>{LETTERS[index]}</b>
+                  <span>{option}</span>
+                </div>
+              ))}
             </div>
 
-            <span className="logic-maze-game-hint">
-              START <span>→</span> FIND THE CORRECT EXIT
-            </span>
-          </div>
+            <div className="logic-maze-game-footer">
+              <span>WALLS BLOCK MOVEMENT</span>
+              <span>ATTEMPTS: {attempts}</span>
+              <span>+10 FOR THE CORRECT EXIT</span>
+            </div>
+          </section>
+        
 
-          <MazeBoard
-            key={`${maze.id || questionIndex}-${boardResetKey}`}
-            maze={maze}
-            question={question}
-            onEndpoint={onEndpoint}
-            disabled={locked || status !== "playing"}
-          />
-
-          <div className="logic-maze-endpoint-legend">
-            {question.options.map((option, index) => (
-              <div
-                className="logic-maze-legend-item"
-                key={`${LETTERS[index]}-${option}`}
-              >
-                <b>{LETTERS[index]}</b>
-                <span>{option}</span>
-              </div>
-            ))}
-          </div>
-
-          <div className="logic-maze-game-footer">
-            <span>WALLS BLOCK MOVEMENT</span>
-            <span>ATTEMPTS: {attempts}</span>
-            <span>+10 FOR THE CORRECT EXIT</span>
-          </div>
-        </section>
       </div>
 
       <footer className="logic-maze-footer">

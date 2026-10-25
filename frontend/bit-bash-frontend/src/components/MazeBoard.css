@@ -136,3 +136,39 @@
     transition: none;
   }
 }
+
+/* Make maze endpoints larger and easier to see */
+.maze-board-exit {
+  opacity: 1;
+  filter: drop-shadow(0 0 5px currentColor);
+}
+
+.maze-board-exit text {
+  font-size: 18px;
+  font-weight: 900;
+  paint-order: stroke;
+  stroke: #080d1b;
+  stroke-width: 2px;
+}
+
+.maze-board-exit circle {
+  stroke: #ffffff;
+  stroke-width: 2px;
+}/* Make maze endpoints larger and easier to see */
+.maze-board-exit {
+  opacity: 1;
+  filter: drop-shadow(0 0 5px currentColor);
+}
+
+.maze-board-exit text {
+  font-size: 18px;
+  font-weight: 900;
+  paint-order: stroke;
+  stroke: #080d1b;
+  stroke-width: 2px;
+}
+
+.maze-board-exit circle {
+  stroke: #ffffff;
+  stroke-width: 2px;
+}

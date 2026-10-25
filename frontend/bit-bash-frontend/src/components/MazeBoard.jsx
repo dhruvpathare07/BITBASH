@@ -288,11 +288,13 @@ if (!isWalkable(row, col + 1) && !exitHere) {
             </text>
           </g>
 
-          {/* Four reachable exits */}
+          
+          {/* Four reachable exits — larger, clearer markers */}
           {exits.map((exit) => {
             const point = center(exit);
             const optionIndex = LETTERS.indexOf(exit.letter);
             const option = question?.options?.[optionIndex] ?? "";
+            const markerRadius = Math.min(cellW, cellH) * 0.42;
 
             return (
               <g
@@ -300,22 +302,35 @@ if (!isWalkable(row, col + 1) && !exitHere) {
                 transform={`translate(${point.x},${point.y})`}
                 className={`maze-board-exit maze-board-exit-${exit.letter.toLowerCase()}`}
               >
-                <circle r={inset * 0.76} fill="#ff70cb" opacity=".13" />
+                {/* Outer glow */}
                 <circle
-                  r={inset * 0.48}
-                  fill="#261534"
-                  stroke="#ff8bd9"
-                  strokeWidth="2.5"
+                  r={markerRadius * 1.2}
+                  fill="#ff70cb"
+                  opacity="0.22"
                 />
+
+                {/* Main marker */}
+                <circle
+                  r={markerRadius}
+                  fill="#261534"
+                  stroke="#ffffff"
+                  strokeWidth="3"
+                />
+
+                {/* Letter */}
                 <text
                   textAnchor="middle"
                   dominantBaseline="central"
-                  fill="#ffe2f6"
-                  fontSize={Math.min(cellW, cellH) * 0.38}
+                  fill="#ffffff"
+                  fontSize={Math.min(cellW, cellH) * 0.55}
                   fontWeight="900"
+                  stroke="#261534"
+                  strokeWidth="0.8"
+                  paintOrder="stroke"
                 >
                   {exit.letter}
                 </text>
+
                 <title>{`Exit ${exit.letter}: ${option}`}</title>
               </g>
             );
