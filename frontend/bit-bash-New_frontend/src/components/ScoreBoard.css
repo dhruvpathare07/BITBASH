@@ -1,0 +1,187 @@
+.sb-panel {
+  position: fixed;
+  /* fallback position (under the timer); ScoreBoard.jsx fine-tunes it */
+  top: 212px;
+  right: 50px;
+  width: 300px;
+  box-sizing: border-box;
+  z-index: 90;
+  padding: 14px 16px;
+  border-radius: 16px;
+  background: linear-gradient(145deg, #12172a, #0b0f1a);
+  border: 1px solid rgba(124, 92, 255, 0.45);
+  box-shadow: 0 0 30px rgba(124, 92, 255, 0.3), 0 10px 40px rgba(0, 0, 0, 0.5);
+  color: #e8ecff;
+  font-family: inherit;
+}
+
+/* TOTAL */
+.sb-total-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 8px;
+}
+
+.sb-total-label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #a88bff;
+}
+
+.sb-total {
+  font-size: 1.8rem;
+  font-weight: 900;
+  color: #ffd84d;
+  text-shadow: 0 0 12px rgba(255, 216, 77, 0.45);
+}
+
+.sb-total small {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #8f9bc4;
+  text-shadow: none;
+}
+
+.sb-bar {
+  height: 7px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+
+.sb-bar-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #00f0ff, #39ff14);
+  transition: width 0.7s ease;
+}
+
+/* per-question marks */
+.sb-chips {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.sb-chip {
+  flex: 1;
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid transparent;
+}
+
+.sb-chip span {
+  color: #8f9bc4;
+  font-weight: 700;
+}
+
+.sb-chip b {
+  color: #e8ecff;
+}
+
+.sb-chip.current {
+  border-color: rgba(124, 92, 255, 0.8);
+  background: rgba(124, 92, 255, 0.18);
+}
+
+/* this question */
+.sb-qline {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.78rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #8f9bc4;
+  margin-bottom: 6px;
+}
+
+.sb-qline span:last-child {
+  color: #e8ecff;
+  font-weight: 700;
+  white-space: nowrap;
+  margin-left: 10px;
+}
+
+/* "Q2 of 3 · Palindrome" - long topic names get cut with ... */
+.sb-qname {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sb-topic {
+  font-style: normal;
+  font-weight: 800;
+  color: #c9b8ff;
+}
+
+.sb-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.sb-step {
+  display: flex;
+  justify-content: space-between;
+  padding: 7px 10px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid transparent;
+  transition: all 0.3s ease;
+}
+
+.sb-step b {
+  color: #8f9bc4;
+}
+
+.sb-step.done {
+  background: rgba(57, 255, 20, 0.12);
+  border-color: rgba(57, 255, 20, 0.5);
+}
+
+.sb-step.done b {
+  color: #39ff14;
+}
+
+.sb-hint {
+  margin-top: 10px;
+  font-size: 0.8rem;
+  color: #9fd8ff;
+  text-align: center;
+}
+
+/* floating "+50" popup */
+.sb-pop {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  transform: translateX(-50%);
+  font-size: 2.2rem;
+  font-weight: 900;
+  color: #39ff14;
+  text-shadow: 0 0 14px rgba(57, 255, 20, 0.9);
+  pointer-events: none;
+  animation: sb-float 1.6s ease-out forwards;
+}
+
+@keyframes sb-float {
+  0%   { opacity: 0; transform: translate(-50%, 10px) scale(0.6); }
+  20%  { opacity: 1; transform: translate(-50%, 24px) scale(1.25); }
+  100% { opacity: 0; transform: translate(-50%, 90px) scale(1); }
+}
+
+@media (max-width: 700px) {
+  .sb-panel { padding: 10px 12px; }
+  .sb-total { font-size: 1.4rem; }
+}
