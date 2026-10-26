@@ -1,6 +1,6 @@
 ﻿import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import '../pages/round2.css';
+import './round2.css';
 
 const Round2 = () => {
   const navigate = useNavigate();
@@ -17,11 +17,13 @@ const Round2 = () => {
         ))}
       </div>
 
-      <div className="decorative-icons">
-        <div className="icon-wrapper">💻</div>
-        <div className="icon-wrapper">👁️‍🗨️</div>
-        <div className="icon-wrapper">🏆</div>
-      </div>
+      
+<div className="decorative-icons">
+  <div className="icon-wrapper" title="Logic Puzzle">🧩</div>
+  <div className="icon-wrapper" title="Brain Power">🧠</div>
+  <div className="icon-wrapper" title="Code Debugging">{"</>"}</div>
+</div>
+
 
       <div className="monitor">
         <div className="monitor-screen">

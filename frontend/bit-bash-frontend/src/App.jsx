@@ -16,6 +16,8 @@ import Question_3_C from "./pages/c/Question_3";
 import Results from "./pages/Results";
 import Round2 from "./pages/Round2";
 import LogicMaze from "./pages/LogicMaze";
+import Round2Results from "./pages/Round2Results";
+
 
 function App() {
   return (
@@ -65,7 +67,12 @@ function App() {
         <Route
           path="/logic-maze"
           element={<RequirePlayer><LogicMaze /></RequirePlayer>}
-        />
+          />
+          <Route
+  path="/round2-results"
+  element={<RequirePlayer><Round2Results /></RequirePlayer>}
+/>
+        
       </Routes>
     </BrowserRouter>
   );

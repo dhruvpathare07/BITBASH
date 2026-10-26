@@ -30,6 +30,7 @@ export default function LogicMaze() {
 
   const questions = LOGIC_MAZE_QUESTIONS[language];
 
+
   const [questionIndex, setQuestionIndex] = useState(0);
   const [view, setView] = useState("question");
   const [score, setScore] = useState(0);
@@ -41,10 +42,14 @@ export default function LogicMaze() {
     : "Trace the code, then navigate to its correct output."
 );
   const [locked, setLocked] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
   const [attempts, setAttempts] = useState(0);
   const [boardResetKey, setBoardResetKey] = useState(0);
 
   const transitionRef = useRef(null);
+  const questionStartedAtRef = useRef(Date.now());
+const questionResultsRef = useRef([]);
+const resultsSavedRef = useRef(false);
 
   const question = questions?.[questionIndex];
   const maze = LOGIC_MAZE_MAPS?.[questionIndex];
@@ -83,33 +88,57 @@ export default function LogicMaze() {
 
   // Save the final result
   useEffect(() => {
-    if (status === "playing") return;
+  if (status === "playing" || resultsSavedRef.current) return;
 
-    sessionStorage.setItem(
-      "logicMazeResults",
-      JSON.stringify({
-        player: profile.fullName || profile.username || "Player",
-        username: profile.username || "",
-        language,
-        score,
-        questionsCompleted: score / 10,
-        totalQuestions: questions.length,
-        timeRemaining: timeLeft,
-        attempts,
-        completedAt: new Date().toISOString(),
-        status,
-      })
+  resultsSavedRef.current = true;
+
+  const finalQuestions = [...questionResultsRef.current];
+
+  // If time ran out during a question, record its elapsed time too.
+  if (status === "time-up" && finalQuestions.length < questions.length) {
+    const elapsed = Math.floor(
+      (Date.now() - questionStartedAtRef.current) / 1000
     );
-  }, [
-    status,
-    profile,
+
+    finalQuestions.push({
+      questionNum: questionIndex + 1,
+      score: 0,
+      timeTaken: Math.min(elapsed, ROUND_SECONDS),
+    });
+  }
+
+  const finalResult = {
+    player: profile.fullName || profile.username || "Player",
+    username: profile.username || "",
     language,
     score,
-    questions.length,
-    timeLeft,
+    questionsCompleted: score / 10,
+    totalQuestions: questions.length,
+    timeRemaining: timeLeft,
+    timeUsed: ROUND_SECONDS - timeLeft,
     attempts,
-  ]);
+    questionResults: finalQuestions,
+    completedAt: new Date().toISOString(),
+    status,
+  };
 
+  sessionStorage.setItem(
+    "logicMazeResults",
+    JSON.stringify(finalResult)
+  );
+
+  navigate("/round2-results", { replace: true });
+}, [
+  status,
+  profile,
+  language,
+  score,
+  questions.length,
+  timeLeft,
+  attempts,
+  questionIndex,
+  navigate,
+]);
   // Handle reaching an exit
   const onEndpoint = useCallback(
     (letter) => {
@@ -119,22 +148,18 @@ export default function LogicMaze() {
       setAttempts((count) => count + 1);
 
       if (letter === question.correct) {
-        setScore((currentScore) => currentScore + 10);
-        setFeedback(`Correct endpoint ${letter}! +10 points.`);
-
-        transitionRef.current = window.setTimeout(() => {
-          if (questionIndex === questions.length - 1) {
-            setStatus("completed");
-          } else {
-  setQuestionIndex((currentIndex) => currentIndex + 1);
-  setBoardResetKey((key) => key + 1);
-  setView("question");
-  setFeedback(
-    "Correct! The next challenge is ready. Trace the new code."
+  const questionTime = Math.floor(
+    (Date.now() - questionStartedAtRef.current) / 1000
   );
-  setLocked(false);
-}
-        }, 850);
+
+  questionResultsRef.current.push({
+    questionNum: questionIndex + 1,
+    score: 10,
+    timeTaken: questionTime,
+  });
+
+  setScore((currentScore) => currentScore + 10);  setFeedback(`Correct endpoint ${letter}! +10 points.`);
+        setShowSuccess(true);
       } else {
         setFeedback(
           `Endpoint ${letter} is incorrect. The same maze will restart.`
@@ -147,7 +172,7 @@ export default function LogicMaze() {
         }, 850);
       }
     },
-    [locked, status, question, questionIndex, questions.length, language]
+    [locked, status, question]
   );
 
   const restart = () => {
@@ -155,7 +180,13 @@ export default function LogicMaze() {
     window.clearTimeout(transitionRef.current);
   }
 
+questionStartedAtRef.current = Date.now();
+questionResultsRef.current = [];
+resultsSavedRef.current = false;
+sessionStorage.removeItem("logicMazeResults");
+
   setQuestionIndex(0);
+  
 setView("question");
   setScore(0);
   setTimeLeft(ROUND_SECONDS);
@@ -189,86 +220,12 @@ setView("question");
       </main>
     );
   }
-
   
-if (status !== "playing") {
-  const completed = status === "completed";
-  const timeUsed = ROUND_SECONDS - timeLeft;
-  const formatResultTime = (seconds) =>
-    `${String(Math.floor(seconds / 60)).padStart(2, "0")}:${String(
-      seconds % 60
-    ).padStart(2, "0")}`;
+return (
+  <main className="logic-maze-page">
+    <header className="logic-maze-header">
 
-  return (
-    <main className="logic-maze-page">
-      <section className="logic-maze-finish">
-        <div className="logic-maze-eyebrow">
-          BIT BASH BONANZA · ROUND 2
-        </div>
 
-        <h1>{completed ? "Maze Run Complete!" : "Time's Up!"}</h1>
-
-        <p>
-          {completed
-            ? "Amazing work! You completed all the challenges."
-            : "Your time has ended. Here's how you performed."}
-        </p>
-
-        <p className="logic-maze-muted">
-          Player: {profile.fullName || profile.username || "Player"}
-          {" · "}
-          Language: {language.toUpperCase()}
-        </p>
-
-        <div className="logic-maze-final-score">
-          {score}
-          <span> / 100</span>
-        </div>
-
-        <p><strong>Final Score</strong></p>
-
-        <div className="logic-maze-result-stats">
-          <div>
-            <strong>{score / 10} / {questions.length}</strong>
-            <span>Correct Answers</span>
-          </div>
-
-          <div>
-            <strong>{attempts}</strong>
-            <span>Total Attempts</span>
-          </div>
-
-          <div>
-            <strong>{formatResultTime(timeUsed)}</strong>
-            <span>Time Used</span>
-          </div>
-
-          <div>
-            <strong>{formatResultTime(timeLeft)}</strong>
-            <span>Time Remaining</span>
-          </div>
-        </div>
-
-        <div className="logic-maze-finish-actions">
-          <button className="logic-maze-primary" onClick={restart}>
-            Play Again
-          </button>
-
-          <button
-            className="logic-maze-secondary"
-            onClick={() => navigate("/")}
-          >
-            Back to Home
-          </button>
-        </div>
-      </section>
-    </main>
-  );
-}
-
-  return (
-    <main className="logic-maze-page">
-      <header className="logic-maze-header">
         <div className="logic-maze-brand">
           <div className="logic-maze-eyebrow">
             BIT BASH BONANZA · ROUND 2
@@ -329,6 +286,50 @@ if (status !== "playing") {
           />
         </div>
       </div>
+      
+{showSuccess && (
+  <div className="logic-maze-success-overlay">
+    <section
+      className="logic-maze-success-card"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="logic-maze-success-title"
+    >
+      <div className="logic-maze-confetti" aria-hidden="true">
+        🎉
+      </div>
+
+      <h2 id="logic-maze-success-title">Well Done!</h2>
+
+      <p>Brilliant! You found the correct path!</p>
+
+      <button
+        type="button"
+        className="logic-maze-success-button"
+        onClick={() => {
+          setShowSuccess(false);
+
+          if (questionIndex === questions.length - 1) {
+            setStatus("completed");
+          }   
+else {
+  setQuestionIndex((index) => index + 1);
+
+  questionStartedAtRef.current = Date.now();
+
+  setBoardResetKey((key) => key + 1);
+  setView("question");
+  setFeedback("Correct! The next challenge is ready. Trace the new code.");
+  setLocked(false);
+}
+        }}
+      >
+        MOVE TO NEXT QUESTION
+      </button>
+    </section>
+  </div>
+)}
+
 
       <div className="logic-maze-content">
         {/* QUESTION FIRST */}
