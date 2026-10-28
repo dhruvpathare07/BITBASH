@@ -106,6 +106,19 @@ def save_result(username, name, class_name, rnd, score, language=""):
         conn.close()
 
 
+def clear_all_results():
+    """Delete every saved result. Returns how many rows were removed."""
+    conn = _connect()
+    try:
+        cur = conn.cursor()
+        cur.execute("DELETE FROM results")
+        removed = cur.rowcount
+        conn.commit()
+        return removed
+    finally:
+        conn.close()
+
+
 def get_all_results():
     """Return one row per player with their round 1 and round 2 scores."""
     conn = _connect()

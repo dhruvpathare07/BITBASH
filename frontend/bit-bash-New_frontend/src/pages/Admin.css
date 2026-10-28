@@ -200,3 +200,134 @@
   font-size: 14px;
   color: var(--text-secondary);
 }
+
+/* ---------- Clear all results ---------- */
+.admin-danger {
+  color: #ff8fa3;
+  border-color: rgba(255, 84, 112, 0.45);
+}
+.admin-danger:hover:not(:disabled) {
+  color: #fff;
+  background: rgba(255, 84, 112, 0.18);
+  border-color: var(--danger);
+}
+.admin-refresh:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.admin-notice {
+  margin-top: 16px;
+  padding: 10px 14px;
+  font-size: 15px;
+  color: var(--success-green);
+  background: rgba(62, 240, 176, 0.08);
+  border: 1px solid rgba(62, 240, 176, 0.35);
+  border-radius: 4px;
+  animation: bb-rise 0.35s var(--ease-out) both;
+}
+
+.admin-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(8, 6, 15, 0.78);
+  backdrop-filter: blur(8px);
+  animation: bb-fade 0.2s ease-out both;
+}
+
+.admin-modal {
+  width: min(460px, 100%);
+  padding: 28px;
+  font-family: var(--font-ui);
+  color: var(--text-primary);
+  background: var(--panel);
+  border: 1px solid var(--line-strong);
+  border-top: 3px solid var(--danger);
+  border-radius: 4px;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6);
+  animation: bb-pop 0.3s var(--ease-spring) both;
+}
+
+.admin-modal h2 {
+  margin: 0 0 10px;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.admin-modal p {
+  margin: 0 0 12px;
+  font-size: 15px;
+  line-height: 1.55;
+  color: var(--text-secondary);
+}
+
+.admin-modal p b {
+  color: var(--text-primary);
+}
+
+.admin-modal-tip {
+  font-size: 14px;
+}
+
+.admin-link {
+  padding: 0;
+  font: inherit;
+  font-weight: 600;
+  color: var(--accent-pink);
+  background: none;
+  border: 0;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.admin-confirm {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 18px 0 6px;
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.admin-confirm b {
+  font-family: var(--font-code);
+  color: #ff8fa3;
+}
+
+.admin-confirm input {
+  height: 44px;
+  padding: 0 12px;
+  font-family: var(--font-code);
+  font-size: 16px;
+  letter-spacing: 0.08em;
+  color: var(--text-primary);
+  background: var(--panel-sunken);
+  border: 1px solid var(--line-strong);
+  border-radius: 4px;
+  outline: none;
+}
+
+.admin-confirm input:focus {
+  border-color: var(--danger);
+  box-shadow: 0 0 0 3px rgba(255, 84, 112, 0.18);
+}
+
+.admin-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.admin-danger-solid {
+  color: #fff;
+  background: var(--danger);
+  border-color: var(--danger);
+}
+.admin-danger-solid:hover:not(:disabled) {
+  filter: brightness(1.08);
+}

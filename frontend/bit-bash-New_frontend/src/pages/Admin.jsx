@@ -32,6 +32,45 @@ export default function Admin() {
   const [authed, setAuthed] = useState(false);
   const [sort, setSort] = useState({ key: "total", dir: "desc" });
 
+  // "Clear all results" confirmation
+  const [showClear, setShowClear] = useState(false);
+  const [confirmText, setConfirmText] = useState("");
+  const [clearing, setClearing] = useState(false);
+  const [clearError, setClearError] = useState("");
+  const [notice, setNotice] = useState("");
+
+  const openClear = () => {
+    setConfirmText("");
+    setClearError("");
+    setShowClear(true);
+  };
+
+  const closeClear = () => {
+    if (!clearing) setShowClear(false);
+  };
+
+  const clearAll = async () => {
+    if (confirmText !== "DELETE") return;
+    setClearing(true);
+    setClearError("");
+    try {
+      const res = await fetch(`${API_BASE}/admin/clear`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ passkey: passkey.trim(), confirm: "DELETE" }),
+      });
+      if (res.status === 401) throw new Error("Wrong passkey. Unlock the panel again.");
+      if (!res.ok) throw new Error("The server didn't delete anything. Try again.");
+      const data = await res.json();
+      setRows([]);
+      setShowClear(false);
+      setNotice(`All results deleted (${data.removed} saved score${data.removed === 1 ? "" : "s"}).`);
+    } catch (e) {
+      setClearError(e.message || "Couldn't reach the server. Nothing was deleted.");
+    }
+    setClearing(false);
+  };
+
   const load = async (key) => {
     setLoading(true);
     setError("");
@@ -233,11 +272,25 @@ export default function Admin() {
             >
               ⬇ Export CSV
             </button>
-            <button className="admin-refresh" onClick={() => load(passkey)}>
+            <button className="admin-refresh" onClick={() => { setNotice(""); load(passkey.trim()); }}>
               ↻ Refresh
+            </button>
+            <button
+              className="admin-refresh admin-danger"
+              onClick={openClear}
+              disabled={rows.length === 0}
+              title={rows.length === 0 ? "There are no results to clear" : "Delete every saved result"}
+            >
+              Clear all results
             </button>
           </div>
         </div>
+
+        {notice && (
+          <div className="admin-notice" role="status">
+            {notice}
+          </div>
+        )}
         <p className="admin-sub">
           {rows.length} player{rows.length === 1 ? "" : "s"} in total. Round 1 is out of 300,
           Round 2 out of 100. Click a column heading to sort.
@@ -245,6 +298,67 @@ export default function Admin() {
 
         {groups.map(renderTable)}
       </div>
+
+      {showClear && (
+        <div
+          className="admin-modal-overlay"
+          onClick={closeClear}
+          onKeyDown={(e) => e.key === "Escape" && closeClear()}
+        >
+          <div
+            className="admin-modal"
+            role="alertdialog"
+            aria-modal="true"
+            aria-labelledby="clear-title"
+            aria-describedby="clear-desc"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 id="clear-title">Delete all results?</h2>
+            <p id="clear-desc">
+              This permanently deletes the Round 1 and Round 2 scores of all{" "}
+              <b>{rows.length} player{rows.length === 1 ? "" : "s"}</b>, for both Python
+              and C. You can't undo this.
+            </p>
+            <p className="admin-modal-tip">
+              Want a copy first?{" "}
+              <button type="button" className="admin-link" onClick={exportCSV}>
+                Export CSV
+              </button>
+            </p>
+
+            <label className="admin-confirm">
+              <span>
+                Type <b>DELETE</b> to confirm
+              </span>
+              <input
+                value={confirmText}
+                onChange={(e) => setConfirmText(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && clearAll()}
+                placeholder="DELETE"
+                autoComplete="off"
+                spellCheck="false"
+                autoFocus
+              />
+            </label>
+
+            {clearError && <p className="admin-error">{clearError}</p>}
+
+            <div className="admin-modal-actions">
+              <button type="button" className="admin-refresh" onClick={closeClear} disabled={clearing}>
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="admin-refresh admin-danger-solid"
+                onClick={clearAll}
+                disabled={confirmText !== "DELETE" || clearing}
+              >
+                {clearing ? "Deleting…" : "Delete all results"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

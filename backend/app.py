@@ -10,7 +10,7 @@ from flask_cors import CORS
 from evaluator import check_code_line_by_line, calculate_line_progress, run_test_cases, normalize, classify_error, CORRECT_CODE
 from c_evaluator import check_code_line_by_line_c, calculate_line_progress_c, run_test_cases_c, classify_error_c, C_CORRECT_CODE
 from runner import run_code   # ✅ Added
-from db import init_db, save_result, get_all_results
+from db import init_db, save_result, get_all_results, clear_all_results
 
 app = Flask(__name__)
 
@@ -272,6 +272,29 @@ def admin_results():
         return jsonify(success=True, results=get_all_results())
     except Exception:
         logger.exception("Error in /admin/results")
+        return jsonify(success=False, error="Internal server error"), 500
+
+
+@app.route("/admin/clear", methods=["POST", "OPTIONS"])
+@rate_limit(10, 60)
+def admin_clear():
+    """Delete all saved results. Needs the passkey AND confirm == "DELETE",
+    so a stray or replayed request can't wipe the scoreboard by accident."""
+    if request.method == "OPTIONS":
+        return "", 200
+    try:
+        if not ADMIN_PASSKEY:
+            return jsonify(success=False, error="Admin not configured"), 503
+        data = read_json_object() or {}
+        if str(data.get("passkey") or "") != ADMIN_PASSKEY:
+            return jsonify(success=False, error="Unauthorized"), 401
+        if data.get("confirm") != "DELETE":
+            return jsonify(success=False, error="Confirmation missing"), 400
+        removed = clear_all_results()
+        logger.info("Admin cleared all results (%s rows)", removed)
+        return jsonify(success=True, removed=removed)
+    except Exception:
+        logger.exception("Error in /admin/clear")
         return jsonify(success=False, error="Internal server error"), 500
 
 
