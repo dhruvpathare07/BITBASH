@@ -57,6 +57,7 @@ export default function PlayerEntry() {
     // Clear old progress (safety)
     sessionStorage.removeItem("bbbProgress");
     sessionStorage.removeItem("bbbResults");
+    sessionStorage.removeItem("round1ResultsSeen");
 
     // Navigate to correct language folder
     // 👈 DYNAMIC ROUTE BASED ON LANGUAGE

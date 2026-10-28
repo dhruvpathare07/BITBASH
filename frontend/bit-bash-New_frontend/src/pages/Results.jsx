@@ -148,6 +148,11 @@ const fastestQuestion = scoreData.reduce((fastest, current) => {
 const playerTitle = getTitle();
 
 
+  // Reaching the Results page unlocks Round 2 (it must come after /results).
+  useEffect(() => {
+    sessionStorage.setItem("round1ResultsSeen", "true");
+  }, []);
+
   // Confetti animation on mount
   useEffect(() => {
     const particles = Array.from({ length: 50 }, (_, i) => ({
