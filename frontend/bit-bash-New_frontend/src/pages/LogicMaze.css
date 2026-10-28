@@ -1,13 +1,14 @@
 
 .logic-maze-page {
-  --bg: #080d19;
-  --panel: #111a2b;
-  --border: rgba(151, 174, 216, 0.18);
-  --text: #f2f5ff;
-  --muted: #98a7c2;
-  --purple: #ad91ff;
-  --cyan: #5be5ff;
-  --green: #4ce2aa;
+  /* Palette now comes from styles/theme.css so Round 2 matches the rest. */
+  --bg: var(--bg-main);
+  --panel: var(--bg-card);
+  --border: var(--border-color);
+  --text: var(--text-primary);
+  --muted: var(--text-secondary);
+  --purple: var(--primary-purple);
+  --cyan: var(--accent-blue);
+  --green: var(--success-green);
 
   box-sizing: border-box;
   min-height: 100vh;
