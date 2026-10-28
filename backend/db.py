@@ -13,6 +13,14 @@ _IS_PG = DATABASE_URL.startswith("postgres")
 # SQLite file lives next to this module and is gitignored.
 SQLITE_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "results.db")
 
+# Serverless hosts (Vercel) only allow writing to /tmp, and /tmp is wiped
+# between instances, so results there are NOT kept. Set DATABASE_URL to a
+# Postgres database in production; this fallback only stops a crash.
+if not _IS_PG and os.environ.get("VERCEL"):
+    SQLITE_PATH = "/tmp/results.db"
+    print("WARNING: DATABASE_URL is not set on Vercel. Results are stored in "
+          "/tmp and will be lost. Add a Postgres DATABASE_URL.")
+
 _SCHEMA = """
 CREATE TABLE IF NOT EXISTS results (
     username   TEXT    NOT NULL,

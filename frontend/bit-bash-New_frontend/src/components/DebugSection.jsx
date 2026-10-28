@@ -5,8 +5,35 @@ import "./DebugSection.css";
 import { PYTHON_BUGGY_CODE } from "../data/pythonBuggyCode";
 import { C_BUGGY_CODE } from "../data/cBuggyCode"; // added
 import { API_BASE } from "../config";
+import { checkOffline } from "../utils/offlineChecker";
 
 const INDENT = "    ";
+const SERVER_TIMEOUT_MS = 6000;
+
+// Ask the server first; if it can't be reached (network cut, server down,
+// overloaded), check in the browser instead so the game keeps going.
+async function evaluateFix(payload) {
+  if (typeof navigator !== "undefined" && navigator.onLine === false) {
+    return checkOffline(payload.topic, payload.code, payload.language);
+  }
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), SERVER_TIMEOUT_MS);
+  try {
+    const res = await fetch(`${API_BASE}/evaluate`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+      signal: controller.signal,
+    });
+    if (res.status >= 500 || res.status === 429) throw new Error(`server ${res.status}`);
+    return await res.json();
+  } catch {
+    return checkOffline(payload.topic, payload.code, payload.language);
+  } finally {
+    clearTimeout(timer);
+  }
+}
 
 export default function DebugSection({ topic, onScoreChange, onSuccess, onGiveUp, language = "python" }) {
   const [code, setCode] = useState("");
@@ -40,18 +67,12 @@ export default function DebugSection({ topic, onScoreChange, onSuccess, onGiveUp
     setLoading(true);
 
     try {
-      const res = await fetch(`${API_BASE}/evaluate`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          topic,
-          code,
-          attempts: nextAttempts,
-          language
-        }),
+      const data = await evaluateFix({
+        topic,
+        code,
+        attempts: nextAttempts,
+        language
       });
-
-      const data = await res.json();
       setResult(data);
 
       const newProgress = Number(data.progress) || 0;
@@ -62,7 +83,7 @@ export default function DebugSection({ topic, onScoreChange, onSuccess, onGiveUp
         setAllFixed(true);
       }
     } catch {
-      setResult({ success: false, message: "Couldn't reach the checker. Make sure the backend is running, then try again." });
+      setResult({ success: false, message: "Something went wrong while checking. Try again." });
     }
 
     setLoading(false);
@@ -162,6 +183,7 @@ export default function DebugSection({ topic, onScoreChange, onSuccess, onGiveUp
           <span className="result-icon" aria-hidden="true">{result.success ? "✓" : "✕"}</span>
           {/* the checker prefixes its own emoji; the icon already shows the state */}
           <span>{String(result.message || "").replace(/^[^\p{L}\p{N}(]+/u, "")}</span>
+          {result.offline && <span className="result-offline">Checked offline</span>}
         </div>
       )}
 

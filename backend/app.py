@@ -113,7 +113,8 @@ PENALTY_PER_FAIL = 2
 
 
 @app.route("/evaluate", methods=["POST", "OPTIONS"])
-@rate_limit(60, 60)
+# Sized for ~80 lab PCs that usually share one public IP.
+@rate_limit(600, 60)
 def evaluate():
     if request.method == "OPTIONS":
         return "", 200
@@ -222,7 +223,7 @@ MAX_ROUND_SCORE = {1: 300, 2: 100}
 
 
 @app.route("/results", methods=["POST", "OPTIONS"])
-@rate_limit(30, 60)
+@rate_limit(400, 60)
 def submit_result():
     if request.method == "OPTIONS":
         return "", 200

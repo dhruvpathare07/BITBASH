@@ -90,6 +90,50 @@ python app.py
 
 ---
 
+## ☁️ Hosting on Vercel, then cutting the network
+
+Players load the game from Vercel while the internet is on. You can then cut
+the LAN/internet and the game keeps working on every PC until the end:
+
+* the whole app is cached in the browser (a service worker), so even a page
+  reload works offline;
+* the debug check runs in the browser when the server can't be reached
+  (it shows "Checked offline"). It holds only fingerprints of the correct
+  lines, not the answers;
+* scores are queued in the browser and uploaded automatically when the
+  network comes back (even after closing and reopening the browser).
+
+### Deploy (two Vercel projects from this repo)
+
+1. **Backend**: new Vercel project, *Root Directory* = `backend`.
+   Environment variables:
+   * `DATABASE_URL`: a Postgres database (e.g. Vercel Postgres / Neon). Required,
+     otherwise scores are not kept.
+   * `ADMIN_PASSKEY`: your admin passkey.
+   * `ALLOWED_ORIGINS`: your frontend URL, e.g. `https://bitbash.vercel.app`.
+2. **Frontend**: new Vercel project, *Root Directory* = `frontend/bit-bash-New_frontend`.
+   Environment variable: `VITE_API_URL` = your backend URL, e.g. `https://bitbash-api.vercel.app`.
+
+### On event day
+
+1. With the internet **on**, open the site on every PC and wait until the
+   home page has fully loaded (a few seconds). That caches the game.
+2. Cut the network. Players play both rounds as normal.
+3. After the event, turn the network back on and leave the browsers open
+   (or reopen the site). Queued scores upload within about 20 seconds; check
+   `/admin`.
+
+> Don't use private/incognito windows: they delete the queued scores when closed.
+> Offline, a fix must match the reference line by line (spacing, indentation and
+> variable names don't matter). Online, the server also runs the code and can
+> accept a different fix that prints the right output.
+>
+> If you change the correct answers in `backend/evaluator.py` or
+> `backend/c_evaluator.py`, run `python backend/build_offline_checker.py` and
+> redeploy so the offline checker matches.
+
+---
+
 ## 🔌 Running Offline (event PC, no internet)
 
 The app runs fully offline — frontend and backend both run locally, and all
