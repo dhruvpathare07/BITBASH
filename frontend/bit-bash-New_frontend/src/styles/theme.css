@@ -98,6 +98,23 @@
     linear-gradient(#ff4fb0, #ff4fb0) right bottom / 18px 2px no-repeat,
     linear-gradient(#ff4fb0, #ff4fb0) right bottom / 2px 18px no-repeat;
 
+  /* ---- Round 2: same system, blue leads instead of pink ---- */
+  --r2-bg: #060a17;
+  --r2-panel: #0e1730;
+  --r2-panel-raised: #15213f;
+  --r2-panel-sunken: #091022;
+  --r2-blue: #3fa9ff;          /* action */
+  --r2-blue-deep: #2563eb;     /* structure */
+  --r2-blue-glow: #9fd4ff;
+  --r2-line: rgba(96, 165, 250, 0.18);
+  --r2-line-strong: rgba(96, 165, 250, 0.38);
+  --r2-grad: linear-gradient(90deg, #3fa9ff, #2563eb);
+  --hud-corners-blue:
+    linear-gradient(#3fa9ff, #3fa9ff) left top / 18px 2px no-repeat,
+    linear-gradient(#3fa9ff, #3fa9ff) left top / 2px 18px no-repeat,
+    linear-gradient(#3fa9ff, #3fa9ff) right bottom / 18px 2px no-repeat,
+    linear-gradient(#3fa9ff, #3fa9ff) right bottom / 2px 18px no-repeat;
+
   /* Cut-corner shape for buttons and badges */
   --cut: 10px;
   --chamfer: polygon(

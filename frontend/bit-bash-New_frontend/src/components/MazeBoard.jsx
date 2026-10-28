@@ -3,19 +3,17 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import "./MazeBoard.css";
 
 const LETTERS = ["A", "B", "C", "D"];
+// Matched on event.code (the physical key), so WASD works with Caps Lock
+// on and on any keyboard layout.
 const DIRECTIONS = {
   ArrowUp: [-1, 0],
   ArrowDown: [1, 0],
   ArrowLeft: [0, -1],
   ArrowRight: [0, 1],
-  w: [-1, 0],
-  W: [-1, 0],
-  s: [1, 0],
-  S: [1, 0],
-  a: [0, -1],
-  A: [0, -1],
-  d: [0, 1],
-  D: [0, 1],
+  KeyW: [-1, 0],
+  KeyS: [1, 0],
+  KeyA: [0, -1],
+  KeyD: [0, 1],
 };
 
 const keyOf = ({ row, col }) => `${row},${col}`;
@@ -100,14 +98,18 @@ export default function MazeBoard({
 
   useEffect(() => {
     const handleKeyDown = (event) => {
-      const direction = DIRECTIONS[event.key];
+      const direction = DIRECTIONS[event.code] || DIRECTIONS[event.key];
       if (!direction || disabled) return;
+      // leave browser shortcuts like Ctrl+S / Ctrl+A alone
+      if (event.ctrlKey || event.metaKey || event.altKey) return;
 
+      // Only skip keys while typing. Buttons are fine: after clicking an
+      // on-screen arrow (or Back), WASD/arrows must still move the player.
       const target = event.target;
       if (
         target instanceof HTMLElement &&
         (target.isContentEditable ||
-          ["INPUT", "TEXTAREA", "SELECT", "BUTTON"].includes(target.tagName))
+          ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName))
       ) {
         return;
       }
@@ -199,19 +201,19 @@ if (!isWalkable(row, col + 1) && !exitHere) {
         >
           <defs>
             <linearGradient id="mazeFloor" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0%" stopColor="#10152b" />
-              <stop offset="100%" stopColor="#080d1b" />
+              <stop offset="0%" stopColor="#0b1430" />
+              <stop offset="100%" stopColor="#060a17" />
             </linearGradient>
 
             <linearGradient id="mazeNeonWall" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0%" stopColor="#ff71c8" />
-              <stop offset="50%" stopColor="#c17bff" />
-              <stop offset="100%" stopColor="#5be7ff" />
+              <stop offset="0%" stopColor="#7dd3ff" />
+              <stop offset="50%" stopColor="#3fa9ff" />
+              <stop offset="100%" stopColor="#4f6bff" />
             </linearGradient>
 
             <linearGradient id="mazeTrail" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0%" stopColor="#ff78d0" />
-              <stop offset="100%" stopColor="#64eaff" />
+              <stop offset="0%" stopColor="#3fa9ff" />
+              <stop offset="100%" stopColor="#ff4fb0" />
             </linearGradient>
 
             <filter id="mazeWallGlow" x="-30%" y="-30%" width="160%" height="160%">
@@ -231,7 +233,7 @@ if (!isWalkable(row, col + 1) && !exitHere) {
             </filter>
 
             <pattern id="mazeDots" width="20" height="20" patternUnits="userSpaceOnUse">
-              <circle cx="2" cy="2" r="1" fill="#7586b4" opacity=".16" />
+              <circle cx="2" cy="2" r="1" fill="#5b8bd6" opacity=".18" />
             </pattern>
           </defs>
 
@@ -242,7 +244,7 @@ if (!isWalkable(row, col + 1) && !exitHere) {
           <path
             d={wallSegments.join(" ")}
             fill="none"
-            stroke="#a66fff"
+            stroke="#3fa9ff"
             strokeWidth={Math.min(cellW, cellH) * 0.2}
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -282,7 +284,8 @@ if (!isWalkable(row, col + 1) && !exitHere) {
               dominantBaseline="central"
               fill="#b7ffe5"
               fontSize={Math.min(cellW, cellH) * 0.38}
-              fontWeight="800"
+              fontWeight="700"
+              fontFamily="Chakra Petch, sans-serif"
             >
               S
             </text>
@@ -305,15 +308,15 @@ if (!isWalkable(row, col + 1) && !exitHere) {
                 {/* Outer glow */}
                 <circle
                   r={markerRadius * 1.2}
-                  fill="#ff70cb"
+                  fill="#3fa9ff"
                   opacity="0.22"
                 />
 
                 {/* Main marker */}
                 <circle
                   r={markerRadius}
-                  fill="#261534"
-                  stroke="#ffffff"
+                  fill="#0b1a3a"
+                  stroke="#9fd4ff"
                   strokeWidth="3"
                 />
 
@@ -323,8 +326,9 @@ if (!isWalkable(row, col + 1) && !exitHere) {
                   dominantBaseline="central"
                   fill="#ffffff"
                   fontSize={Math.min(cellW, cellH) * 0.55}
-                  fontWeight="900"
-                  stroke="#261534"
+                  fontWeight="700"
+                  fontFamily="Chakra Petch, sans-serif"
+                  stroke="#0b1a3a"
                   strokeWidth="0.8"
                   paintOrder="stroke"
                 >

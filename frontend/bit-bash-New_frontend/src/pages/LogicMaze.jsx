@@ -10,6 +10,7 @@ import { LOGIC_MAZE_MAPS } from "../data/logicMazeMaps";
 import "./LogicMaze.css";
 
 const LETTERS = ["A", "B", "C", "D"];
+const AVATARS = ["🐶", "🐱", "🦊", "🐼", "🐸", "🐯", "😄", "😎", "🤓", "🥳", "😈", "🤩"];
 const ROUND_SECONDS = 30 * 60;
 
 export default function LogicMaze() {
@@ -220,229 +221,193 @@ setView("question");
       </main>
     );
   }
-  
-return (
-  <main className="logic-maze-page">
-    <header className="logic-maze-header">
 
+  const urgency = timeLeft <= 60 ? "critical" : timeLeft <= 120 ? "low" : "";
+  const isLast = questionIndex === questions.length - 1;
+  const fileName = language === "c" ? "main.c" : "main.py";
 
-        <div className="logic-maze-brand">
-          <div className="logic-maze-eyebrow">
-            BIT BASH BONANZA · ROUND 2
-          </div>
+  return (
+    <main className="logic-maze-page" data-view={view}>
+      <div className="lm-grid" aria-hidden="true" />
 
-          <h1>
-            Logic <span>Maze</span>
-          </h1>
-
-          <p>Trace the logic. Find your way out.</p>
+      {/* ---------- Top bar ---------- */}
+      <header className="lm-topbar">
+        <div className="lm-qbox">
+          <span className="lm-round">Round 2</span>
+          <span className="lm-qnum">
+            Q{questionIndex + 1}
+            <small>/{questions.length}</small>
+          </span>
+          <span className="lm-title">Logic Maze</span>
         </div>
 
-        <div className="logic-maze-stats">
-          <div className="logic-maze-stat">
-            <small>PLAYER</small>
-            <strong>{profile.fullName || profile.username || "Player"}</strong>
-          </div>
+        <div className="lm-player">
+          <span className="lm-avatar">{AVATARS[profile.avatar] || "🙂"}</span>
+          <span>{profile.username || profile.fullName || "Player"}</span>
+          <span className="lm-lang">{language === "c" ? "C" : "Python"}</span>
+        </div>
 
-          <div className="logic-maze-stat">
-            <small>LANGUAGE</small>
-            <strong>{language.toUpperCase()}</strong>
-          </div>
-
-          <div className="logic-maze-stat">
-            <small>TIME LEFT</small>
-            <strong
-              className={
-                timeLeft < 120 ? "logic-maze-warning" : ""
-              }
-            >
-              {formatTime(timeLeft)}
-            </strong>
-          </div>
-
-          <div className="logic-maze-stat">
-            <small>SCORE</small>
-            <strong>
-              {score}
-              <em>/100</em>
-            </strong>
-          </div>
+        <div className={`lm-timer ${urgency}`} role="timer">
+          <span>Time left</span>
+          <b>{formatTime(timeLeft)}</b>
         </div>
       </header>
 
-      <div className="logic-maze-progress">
-        <div className="logic-maze-progress-label">
-          <span>
-            CHALLENGE {String(questionIndex + 1).padStart(2, "0")} /{" "}
-            {questions.length}
-          </span>
-          <span>{Math.round((score / 100) * 100)}% SCORE</span>
-        </div>
-
-        <div className="logic-maze-progress-track">
-          <div
-            className="logic-maze-progress-fill"
-            style={{ width: `${(questionIndex / questions.length) * 100}%` }}
-          />
-        </div>
-      </div>
-      
-{showSuccess && (
-  <div className="logic-maze-success-overlay">
-    <section
-      className="logic-maze-success-card"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="logic-maze-success-title"
-    >
-      <div className="logic-maze-confetti" aria-hidden="true">
-        🎉
-      </div>
-
-      <h2 id="logic-maze-success-title">Well Done!</h2>
-
-      <p>Brilliant! You found the correct path!</p>
-
-      <button
-        type="button"
-        className="logic-maze-success-button"
-        onClick={() => {
-          setShowSuccess(false);
-
-          if (questionIndex === questions.length - 1) {
-            setStatus("completed");
-          }   
-else {
-  setQuestionIndex((index) => index + 1);
-
-  questionStartedAtRef.current = Date.now();
-
-  setBoardResetKey((key) => key + 1);
-  setView("question");
-  setFeedback("Correct! The next challenge is ready. Trace the new code.");
-  setLocked(false);
-}
-        }}
-      >
-        MOVE TO NEXT QUESTION
-      </button>
-    </section>
-  </div>
-)}
-
-
-      <div className="logic-maze-content">
-        {/* QUESTION FIRST */}
-       {view === "question" && (
-  <section className="logic-maze-question-card">
-    
-          <div className="logic-maze-card-top">
-            <span>YOUR CODING CHALLENGE</span>
-            <span className="logic-maze-points">+10 POINTS</span>
-          </div>
-
-          <div className="logic-maze-question-heading">
-            <div>
-              <h2>Predict the output</h2>
-              <p>
-  {language === "c"
-    ? "Read the C code carefully and predict its output."
-    : "Read the code carefully, then guide your character through the maze to the matching output."}
-</p>
-            </div>
-
-            <div className="logic-maze-question-number">
-              {String(questionIndex + 1).padStart(2, "0")}
-            </div>
-          </div>
-
-          <pre className="logic-maze-code">
-            <code>{question.code}</code>
-          </pre>
-
-          
-          
-<div
-  className={`logic-maze-feedback ${
-    feedback.startsWith("Correct") ? "is-correct" : ""
-  }`}
-  aria-live="polite"
->
-  <span className="logic-maze-feedback-icon">
-    {feedback.startsWith("Correct") ? "✓" : "↳"}
-  </span>
-  <span>{feedback}</span>
-</div>
-
-{view === "question" && (
-  <button
-    type="button"
-    className="logic-maze-primary logic-maze-next"
-    onClick={() => setView("maze")}
-  >
-    Next: Enter the Maze →
-  </button>
-)}        </section>
-        )}
-
-        {/* MAZE — shown on the maze screen */}
-       <section
-  className="logic-maze-game-card"
-  style={{ display: view === "maze" ? "block" : "none" }}
->
-            <div className="logic-maze-game-heading">
-              <div>
-                <span className="logic-maze-live-dot" />
-                <strong>MAZE ZONE</strong>
+      <div className="lm-layout">
+        <div className="lm-main">
+          {/* ---------- Step 1: read the code ---------- */}
+          {view === "question" && (
+            <section className="lm-card lm-question" key={`q-${questionIndex}`}>
+              <div className="lm-card-head">
+                <div>
+                  <h2>Predict the output</h2>
+                  <p>
+                    Read the code and work out what it prints. Then enter the maze
+                    and walk to the exit with that output.
+                  </p>
+                </div>
+                <span className="lm-points">10 marks</span>
               </div>
-              <span className="logic-maze-game-hint">
-                START <span>→</span> FIND THE CORRECT EXIT
-              </span>
+
+              <div className="lm-terminal">
+                <div className="lm-terminal-bar">
+                  <span className="lm-dots" aria-hidden="true"><i /><i /><i /></span>
+                  <span>{fileName}</span>
+                </div>
+                <pre className="logic-maze-code">
+                  <code>{question.code}</code>
+                </pre>
+              </div>
+
+              <div
+                className={`logic-maze-feedback ${feedback.startsWith("Correct") ? "is-correct" : ""}`}
+                aria-live="polite"
+              >
+                <span className="logic-maze-feedback-icon">
+                  {feedback.startsWith("Correct") ? "✓" : "i"}
+                </span>
+                <span>{feedback}</span>
+              </div>
+
+              <button
+                type="button"
+                className="lm-btn lm-btn-primary"
+                onClick={() => setView("maze")}
+              >
+                Enter the maze
+              </button>
+            </section>
+          )}
+
+          {/* ---------- Step 2: walk the maze ----------
+              Always mounted so the board keeps its state, but it only
+              listens to the keyboard while it's on screen. */}
+          <section
+            className="lm-card lm-maze"
+            style={{ display: view === "maze" ? "block" : "none" }}
+          >
+            <div className="lm-card-head">
+              <div>
+                <h2>Walk to the matching exit</h2>
+                <p>Move with WASD or the arrow keys. A wrong exit sends you back to the start.</p>
+              </div>
+              <button
+                type="button"
+                className="lm-btn lm-btn-ghost"
+                onClick={() => setView("question")}
+              >
+                Back to the code
+              </button>
             </div>
-          {view === "maze" && (
-  <button
-    type="button"
-    className="logic-maze-secondary logic-maze-back"
-    onClick={() => setView("question")}
-  >
-    ← Back to Question
-  </button>
-)}
 
             <MazeBoard
               key={`${maze.id || questionIndex}-${boardResetKey}`}
               maze={maze}
               question={question}
               onEndpoint={onEndpoint}
-              disabled={locked || status !== "playing"}
+              disabled={locked || status !== "playing" || view !== "maze"}
             />
 
+            {/* Options stay under the maze, where players expect them */}
             <div className="logic-maze-endpoint-legend">
               {question.options.map((option, index) => (
-                <div
-                  className="logic-maze-legend-item"
-                  key={`${LETTERS[index]}-${option}`}
-                >
+                <div className="logic-maze-legend-item" key={`${LETTERS[index]}-${option}`}>
                   <b>{LETTERS[index]}</b>
                   <span>{option}</span>
                 </div>
               ))}
             </div>
-
-            <div className="logic-maze-game-footer">
-              <span>WALLS BLOCK MOVEMENT</span>
-              <span>ATTEMPTS: {attempts}</span>
-              <span>+10 FOR THE CORRECT EXIT</span>
-            </div>
           </section>
-        
+        </div>
 
+        {/* ---------- Right rail ---------- */}
+        <aside className="lm-rail" aria-live="polite">
+          <div className="lm-rail-label">Round 2 marks</div>
+          <div className="lm-score">
+            <span key={score} className="lm-score-num">{score}</span>
+            <small>/ 100</small>
+          </div>
+          <div className="lm-bar">
+            <div className="lm-bar-fill" style={{ width: `${score}%` }} />
+          </div>
+
+          <div className="lm-rail-label">Challenges</div>
+          <ol className="lm-steps" aria-label="Challenge progress">
+            {questions.map((_, i) => (
+              <li
+                key={i}
+                className={i < questionIndex ? "done" : i === questionIndex ? "current" : ""}
+                title={`Challenge ${i + 1}`}
+              >
+                {i + 1}
+              </li>
+            ))}
+          </ol>
+
+          <div className="lm-attempts">
+            <span>Exits tried</span>
+            <b>{attempts}</b>
+          </div>
+        </aside>
       </div>
 
-      <footer className="logic-maze-footer">
-        <span>ONE CORRECT EXIT · 10 POINTS EACH</span>
-        <span>KEEP MOVING — YOUR TIMER IS RUNNING</span>
-      </footer>
+      {/* ---------- Correct exit ---------- */}
+      {showSuccess && (
+        <div className="logic-maze-success-overlay">
+          <section
+            className="logic-maze-success-card"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="logic-maze-success-title"
+          >
+            <div className="logic-maze-confetti" aria-hidden="true">✓</div>
+            <h2 id="logic-maze-success-title">Correct exit</h2>
+            <p>That's the right output. You earned 10 marks.</p>
+
+            <button
+              type="button"
+              className="lm-btn lm-btn-primary"
+              autoFocus
+              onClick={() => {
+                setShowSuccess(false);
+
+                if (isLast) {
+                  setStatus("completed");
+                } else {
+                  setQuestionIndex((index) => index + 1);
+                  questionStartedAtRef.current = Date.now();
+                  setBoardResetKey((key) => key + 1);
+                  setView("question");
+                  setFeedback("Correct! The next challenge is ready. Trace the new code.");
+                  setLocked(false);
+                }
+              }}
+            >
+              {isLast ? "See my results" : "Next challenge"}
+            </button>
+          </section>
+        </div>
+      )}
     </main>
   );
 }
