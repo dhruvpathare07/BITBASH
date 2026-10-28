@@ -701,7 +701,6 @@
   text-transform: uppercase;
   letter-spacing: 1px;
   font-weight: 600;
-  margin-left: 10%;
 }
 
 .committee-name {
@@ -1197,24 +1196,27 @@
 
 
 .footer-logo{
-  margin-right: 20%;
+  margin: 0;
   z-index: 4;
-  height: 80px;
+  height: 64px;
   width: auto;
 }
 
 .footer-powered {
   display: flex;
+  flex-direction: row;
   align-items: center;
   justify-content: center;
-  gap: 25px;
+  gap: 18px;
 }
 
+/* logo and text sit side by side, text left-aligned next to the logo */
 .footer-text {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  text-align: center;
+  align-items: flex-start;
+  gap: 2px;
+  text-align: left;
 }
 
 .powered-by {
@@ -1230,9 +1232,8 @@
   font-weight: 700;
   font-family: 'EB Garamond', serif;
   color: var(--accent-blue);
-  align-items: center;
-  text-align: center;
-  margin-left: 135px;
+  text-align: left;
+  margin: 0;
 }
 
 
@@ -1391,25 +1392,13 @@
   /* margin-right: -40px !important; */
   border-top: 2px solid var(--border-color) !important;
 }
-.pdf-mode .powered-by {
-  /* margin-bottom: 30px !important; */
-  margin-left: -250px !important;
-  right: 170px !important;
-  white-space: nowrap !important;
-  position: relative !important;
-  gap: 0 !important;
-}
+.pdf-mode .powered-by,
 .pdf-mode .committee-name {
-  margin-bottom: 25px !important;
-  margin-right: 250px !important;
+  margin: 0 !important;
   white-space: nowrap !important;
-  right: 100px !important;
-  position: relative !important;
 }
 .pdf-mode .footer-logo {
-  margin-right: 0px !important;
-  right: 130px !important;
-  position: relative !important;
+  margin: 0 !important;
 }
 /* Remove backdrop blur for clean print */
 .pdf-mode {

@@ -373,7 +373,7 @@ const handleDownloadPDF = async () => {
 
     <div className="footer-text">
       <div className="powered-by">POWERED BY</div>
-      <div className="committee-name" style={{marginLeft :'10px'}}> Bits 'N' Bytes Committee</div>
+      <div className="committee-name">Bits 'N' Bytes Committee</div>
     </div>
   </div>
 </div>
