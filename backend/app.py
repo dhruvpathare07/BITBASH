@@ -6,6 +6,7 @@ from flask_cors import CORS
 from evaluator import check_code_line_by_line, calculate_line_progress, run_test_cases, normalize, classify_error, CORRECT_CODE
 from c_evaluator import check_code_line_by_line_c, calculate_line_progress_c, run_test_cases_c, classify_error_c, C_CORRECT_CODE
 from runner import run_code   # ✅ Added
+from db import init_db, save_result, get_all_results
 
 app = Flask(__name__)
 
@@ -16,6 +17,36 @@ MAX_INPUT_LENGTH = 2_000
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("bitbash")
+
+def _load_env_file():
+    """Load KEY=VALUE lines from a gitignored backend/.env, if present.
+
+    Keeps secrets (like the admin passkey) out of the committed source and
+    out of the client bundle. In production set real env vars instead.
+    """
+    path = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env")
+    if not os.path.exists(path):
+        return
+    try:
+        with open(path, encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if not line or line.startswith("#") or "=" not in line:
+                    continue
+                key, value = line.split("=", 1)
+                os.environ.setdefault(key.strip(), value.strip())
+    except Exception:
+        logger.warning("Could not read backend/.env")
+
+
+_load_env_file()
+
+# Admin passkey is validated server-side (never shipped to the browser).
+# Set it in backend/.env (gitignored) or as a real env var in production.
+# When unset, the admin endpoint is disabled.
+ADMIN_PASSKEY = os.environ.get("ADMIN_PASSKEY", "")
+
+init_db()
 
 # Frontend origin(s), comma-separated; defaults to the Vite dev server.
 ALLOWED_ORIGINS = [
@@ -184,6 +215,51 @@ def evaluate_c_code(topic, code, attempts):
             else "Logic is correct!"
         )
     )
+
+
+@app.route("/results", methods=["POST", "OPTIONS"])
+def submit_result():
+    if request.method == "OPTIONS":
+        return "", 200
+    try:
+        data = read_json_object()
+        if data is None:
+            return jsonify(success=False, error="Invalid request"), 400
+
+        username = str(data.get("username") or "").strip()
+        name = str(data.get("name") or "").strip()
+        class_name = str(data.get("className") or "").strip()
+        rnd = data.get("round")
+
+        try:
+            score = int(data.get("score"))
+        except (TypeError, ValueError):
+            return jsonify(success=False, error="Invalid score"), 400
+
+        if not username or rnd not in (1, 2) or not (0 <= score <= 1000):
+            return jsonify(success=False, error="Missing or invalid fields"), 400
+
+        save_result(username[:60], name[:80], class_name[:40], rnd, score)
+        return jsonify(success=True)
+    except Exception:
+        logger.exception("Error in /results")
+        return jsonify(success=False, error="Internal server error"), 500
+
+
+@app.route("/admin/results", methods=["POST", "OPTIONS"])
+def admin_results():
+    if request.method == "OPTIONS":
+        return "", 200
+    try:
+        if not ADMIN_PASSKEY:
+            return jsonify(success=False, error="Admin not configured"), 503
+        data = read_json_object() or {}
+        if str(data.get("passkey") or "") != ADMIN_PASSKEY:
+            return jsonify(success=False, error="Unauthorized"), 401
+        return jsonify(success=True, results=get_all_results())
+    except Exception:
+        logger.exception("Error in /admin/results")
+        return jsonify(success=False, error="Internal server error"), 500
 
 
 if __name__ == "__main__":
