@@ -2,6 +2,7 @@
 import Welcome from "./pages/Welcome";
 import PlayerEntry from "./pages/PlayerEntry";
 import RequirePlayer from "./components/RequirePlayer";
+import RequireRound1 from "./components/RequireRound1";
 
 // PYTHON IMPORTS
 import Question_1 from "./pages/Question_1";
@@ -62,15 +63,15 @@ function App() {
         />
         <Route
           path="/round-2"
-          element={<RequirePlayer><Round2 /></RequirePlayer>}
+          element={<RequirePlayer><RequireRound1><Round2 /></RequireRound1></RequirePlayer>}
         />  
         <Route
           path="/logic-maze"
-          element={<RequirePlayer><LogicMaze /></RequirePlayer>}
+          element={<RequirePlayer><RequireRound1><LogicMaze /></RequireRound1></RequirePlayer>}
           />
           <Route
   path="/round2-results"
-  element={<RequirePlayer><Round2Results /></RequirePlayer>}
+  element={<RequirePlayer><RequireRound1><Round2Results /></RequireRound1></RequirePlayer>}
 />
         
       </Routes>
