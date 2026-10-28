@@ -25,6 +25,7 @@ export default function PlayerEntry() {
   const [username, setUsername] = useState("");
   const [className, setClassName] = useState("");
   const [avatar, setAvatar] = useState(null);
+  const [error, setError] = useState("");
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -32,10 +33,15 @@ export default function PlayerEntry() {
   const language = location.state?.language || "python";
 
   const handleStart = () => {
-    if (!fullName || !username || !className || avatar === null) {
-      alert("Please complete all fields");
+    if (!fullName.trim() || !username.trim() || !className.trim() || avatar === null) {
+      setError(
+        avatar === null
+          ? "Please choose an avatar and fill in all fields."
+          : "Please fill in all fields."
+      );
       return;
     }
+    setError("");
 
     const profile = {
       fullName,
@@ -57,6 +63,7 @@ export default function PlayerEntry() {
     // Clear old progress (safety)
     sessionStorage.removeItem("bbbProgress");
     sessionStorage.removeItem("bbbResults");
+    sessionStorage.removeItem("round1ResultsSeen");
 
     // Navigate to correct language folder
     // 👈 DYNAMIC ROUTE BASED ON LANGUAGE
@@ -129,6 +136,9 @@ export default function PlayerEntry() {
           />
         </div>
       </div>
+
+      {/* Validation message */}
+      {error && <div className="entry-error" role="alert">{error}</div>}
 
       {/* Start Button - Bottom */}
       <div className="button-wrapper">

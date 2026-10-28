@@ -6,8 +6,8 @@
 }
 
 body {
-  background-color: #0f172a; /* dark blue */
-  color: #e5e7eb;
+  background-color: var(--bg-main);
+  color: var(--text-primary);
 }
 
 h1, h2, h3 {

@@ -1,0 +1,172 @@
+.admin-page {
+  min-height: 100vh;
+  background:
+    radial-gradient(ellipse at 15% 0%, rgba(124, 92, 255, 0.14), transparent 40%),
+    radial-gradient(ellipse at 90% 30%, rgba(255, 78, 205, 0.10), transparent 38%),
+    var(--bg-main);
+  color: var(--text-primary);
+  font-family: Inter, "Segoe UI", Arial, sans-serif;
+  padding: clamp(20px, 5vw, 60px);
+  display: flex;
+  justify-content: center;
+}
+
+/* ---- Passkey gate ---- */
+.admin-gate {
+  margin: auto;
+  width: min(360px, 90vw);
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  padding: 34px 28px;
+  text-align: center;
+  box-shadow: 0 0 40px rgba(124, 92, 255, 0.18);
+}
+
+.admin-title {
+  font-size: 1.8rem;
+  font-weight: 800;
+  background: var(--grad-neon);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.admin-sub {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  margin: 8px 0 18px;
+}
+
+.admin-input {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-main);
+  color: var(--text-primary);
+  font-size: 1rem;
+  outline: none;
+  margin-bottom: 14px;
+}
+.admin-input:focus {
+  border-color: var(--primary-purple);
+  box-shadow: 0 0 0 3px rgba(124, 92, 255, 0.25);
+}
+
+.admin-btn,
+.admin-refresh {
+  cursor: pointer;
+  border: none;
+  border-radius: 10px;
+  padding: 11px 18px;
+  font-weight: 700;
+  color: #fff;
+  background: var(--grad-neon);
+  transition: transform 0.12s ease, opacity 0.12s ease;
+}
+.admin-btn {
+  width: 100%;
+  font-size: 1rem;
+}
+.admin-btn:hover,
+.admin-refresh:hover {
+  transform: translateY(-1px);
+}
+.admin-btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.admin-error {
+  color: var(--accent-pink);
+  margin-top: 12px;
+  font-size: 0.88rem;
+}
+
+/* ---- Results table ---- */
+.admin-content {
+  width: min(840px, 100%);
+}
+
+.admin-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.admin-refresh {
+  font-size: 0.85rem;
+  padding: 9px 14px;
+}
+
+.admin-table-wrap {
+  margin-top: 18px;
+  overflow-x: auto;
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  background: var(--bg-card);
+}
+
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+}
+
+.admin-table th,
+.admin-table td {
+  padding: 13px 16px;
+  text-align: left;
+  border-bottom: 1px solid rgba(124, 92, 255, 0.12);
+}
+
+.admin-table thead th {
+  color: var(--primary-glow);
+  font-size: 0.78rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.admin-table tbody tr:last-child td {
+  border-bottom: none;
+}
+.admin-table tbody tr:hover {
+  background: rgba(124, 92, 255, 0.07);
+}
+
+.admin-table .num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.admin-table .rank {
+  color: var(--text-secondary);
+  width: 2.5rem;
+}
+.admin-table .total {
+  font-weight: 800;
+  color: var(--accent-pink);
+}
+
+.admin-empty {
+  text-align: center;
+  color: var(--text-secondary);
+  padding: 28px;
+}
+
+/* Actions bar (Export + Refresh) */
+.admin-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* Sortable column headers */
+.admin-table th.sortable {
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+}
+.admin-table th.sortable:hover {
+  color: var(--accent-pink, #ff4ecd);
+}

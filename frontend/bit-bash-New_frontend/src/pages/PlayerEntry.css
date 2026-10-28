@@ -511,3 +511,18 @@ body {
 .avatar.selected .avatar-emoji {
   font-size: 35px;
 }
+
+/* Inline validation message (replaces the old alert popup). */
+.entry-error {
+  margin: 14px auto 0;
+  max-width: 420px;
+  padding: 10px 16px;
+  text-align: center;
+  color: #ff6b9d;
+  background: rgba(255, 78, 205, 0.1);
+  border: 1px solid rgba(255, 78, 205, 0.5);
+  border-radius: 10px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  box-shadow: 0 0 18px rgba(255, 78, 205, 0.25);
+}

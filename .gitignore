@@ -14,3 +14,8 @@ backend/venv/
 # Frontend dependencies and builds
 node_modules/
 dist/
+# Backend database & secrets
+*.db
+backend/results.db
+.env
+.env.local

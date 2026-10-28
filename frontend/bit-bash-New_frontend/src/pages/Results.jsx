@@ -5,6 +5,7 @@ import logo from "../assets/bnb_logo.png";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import { useNavigate } from "react-router-dom";
+import { postResult } from "../config";
 
 
 
@@ -148,6 +149,26 @@ const fastestQuestion = scoreData.reduce((fastest, current) => {
 const playerTitle = getTitle();
 
 
+  // Reaching the Results page unlocks Round 2 (it must come after /results).
+  useEffect(() => {
+    sessionStorage.setItem("round1ResultsSeen", "true");
+  }, []);
+
+  // Save this player's Round 1 score for the admin panel (retries on failure).
+  useEffect(() => {
+    if (totalScore <= 0) return;
+    const p = JSON.parse(sessionStorage.getItem("playerProfile") || "{}");
+    if (!p.username) return;
+    postResult({
+      username: p.username,
+      name: p.fullName,
+      className: p.className,
+      language: (p.language || "").toLowerCase(),
+      round: 1,
+      score: Math.round(totalScore),
+    });
+  }, [totalScore]);
+
   // Confetti animation on mount
   useEffect(() => {
     const particles = Array.from({ length: 50 }, (_, i) => ({
@@ -168,8 +189,6 @@ const playerTitle = getTitle();
   }, []);
 
   const handleNextRound = () => {
-    alert('Moving to Next Round! 🚀');
-    // Add your navigation logic here
     navigate("/round-2");
   };
   const pdfRef = useRef(null);

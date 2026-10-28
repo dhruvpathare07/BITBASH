@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import "./DebugSection.css";
 import { PYTHON_BUGGY_CODE } from "../data/pythonBuggyCode";
 import { C_BUGGY_CODE } from "../data/cBuggyCode"; // added
+import { API_BASE } from "../config";
 
 export default function DebugSection({ topic, score, onScoreChange, onSuccess, onGiveUp, language = "python" }) {
   const navigate = useNavigate();
@@ -86,7 +87,7 @@ const updateScore = (delta) => {
   setLoading(true);
 
   try {
-    const res = await fetch("http://localhost:5000/evaluate", {
+    const res = await fetch(`${API_BASE}/evaluate`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({

@@ -18,6 +18,7 @@ import Results from "./pages/Results";
 import Round2 from "./pages/Round2";
 import LogicMaze from "./pages/LogicMaze";
 import Round2Results from "./pages/Round2Results";
+import Admin from "./pages/Admin";
 
 
 function App() {
@@ -27,6 +28,9 @@ function App() {
         {/* Main Entry */}
         <Route path="/" element={<Welcome />} />
         <Route path="/player-entry" element={<PlayerEntry />} />
+
+        {/* Admin panel (passkey-gated server-side) */}
+        <Route path="/admin" element={<Admin />} />
 
         {/* Python routes */}
         <Route

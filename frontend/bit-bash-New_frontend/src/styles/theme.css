@@ -1,0 +1,48 @@
+/* ============================================================
+   Bit Bash Bonanza - shared cyberpunk theme (pink + purple)
+   Single source of truth for colors. Every page/component
+   should use these tokens so the UI looks the same everywhere.
+   ============================================================ */
+
+:root {
+  /* Backgrounds */
+  --bg-main: #0b0f1a;
+  --bg-deep: #080d1b;
+  --bg-card: #12172a;
+  --panel: #12172a;
+
+  /* Core cyberpunk accents (pink + purple lead) */
+  --primary-purple: #7c5cff;
+  --primary-glow: #a88bff;
+  --accent-pink: #ff4ecd;
+  --accent-blue: #4dd0ff;
+  --accent-cyan: #5be7ff;
+
+  /* Status */
+  --success-green: #2ecc71;
+  --success-dark: #1e7f4f;
+  --warning-orange: #f39c12;
+
+  /* Text */
+  --text-primary: #ffffff;
+  --text-secondary: #a0aec0;
+  --text-light: rgba(255, 255, 255, 0.8);
+  --text-lighter: rgba(255, 255, 255, 0.5);
+
+  /* Lines */
+  --border-color: rgba(124, 92, 255, 0.3);
+
+  /* Signature gradient (pink -> purple) */
+  --grad-neon: linear-gradient(90deg, var(--accent-pink), var(--primary-purple));
+
+  /* ---- Aliases used by the Round 2 maze files ----
+     Kept pointing at the canonical values above so those
+     pages share one palette instead of their own. */
+  --bg: var(--bg-main);
+  --purple: var(--primary-purple);
+  --cyan: var(--accent-blue);
+  --green: var(--success-green);
+  --text: var(--text-primary);
+  --muted: var(--text-secondary);
+  --border: var(--border-color);
+}
