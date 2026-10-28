@@ -11,7 +11,6 @@ import "./Timer.css";
 const Timer = forwardRef(({ onTimeUp, getTimeLeft }, ref) => {
   const [time, setTime] = useState(600);
   const intervalRef = useRef(null);
-  const timerRef = useRef(null);
   const hasFiredRef = useRef(false);
 
   // 🔥 START TIMER
@@ -29,19 +28,10 @@ const Timer = forwardRef(({ onTimeUp, getTimeLeft }, ref) => {
     return () => clearInterval(intervalRef.current);
   }, []);
 
-  // 🔥 WARNING + TIME UP HANDLING (Single Effect Only)
+  // 🔥 TIME UP HANDLING (warning colours are classes below)
   useEffect(() => {
-    if (!timerRef.current) return;
-
-    if (time <= 10 && time > 0) {
-      timerRef.current.classList.add("warning");
-    } else {
-      timerRef.current.classList.remove("warning");
-    }
-
     if (time === 0 && !hasFiredRef.current) {
       hasFiredRef.current = true;
-      timerRef.current.classList.add("time-up");
       onTimeUp?.();
     }
 
@@ -59,9 +49,21 @@ const Timer = forwardRef(({ onTimeUp, getTimeLeft }, ref) => {
   const minutes = Math.floor(time / 60);
   const seconds = time % 60;
 
+  // amber under 2 minutes, red under 1, shaking in the last 10 seconds
+  const urgency =
+    time === 0 ? "time-up"
+    : time <= 10 ? "critical warning"
+    : time <= 60 ? "critical"
+    : time <= 120 ? "low"
+    : "";
+
   return (
-    <div className="flip-timer" ref={timerRef}>
-      <div className="flip-timer-label">TIME LEFT</div>
+    <div
+      className={`flip-timer ${urgency}`}
+      role="timer"
+      aria-label={`${minutes} minutes ${seconds} seconds left`}
+    >
+      <div className="flip-timer-label">Time left</div>
 
       <div className="flip-timer-container">
         <div className="time-group">

@@ -129,7 +129,7 @@ export default function Question_3() {
   }
 
   return (
-    <div className="game-screen">
+    <div className="game-screen" data-phase={phase}>
       {/* Background effects */}
       <div className="bg-grid"></div>
       <div className="bg-glow bg-glow-1"></div>
@@ -201,9 +201,9 @@ export default function Question_3() {
                 <div className="debug-section">
                   <div className="debug-card">
                     <div className="debug-icon">🏆</div>
-                    <h2 className="debug-title">Code Assembled Successfully</h2>
+                    <h2 className="debug-title">Code assembled</h2>
                     <p className="debug-text">
-                      Final round unlocked ⚡ This is the Hardest Challenge — Debug Like A Pro !!!
+                      Every line is in place. This last one is the hardest, so take your time with the bugs.
                     </p>
 
                     <div className="debug-actions">
@@ -211,7 +211,7 @@ export default function Question_3() {
                         className="debug-btn success"
                         onClick={() => setPhase("debug")}
                       >
-                        Start Debugging
+                        Start debugging
                       </button>
                     </div>
                   </div>
@@ -246,13 +246,13 @@ export default function Question_3() {
             <div className="modal-glow"></div>
             <div className="modal-content">
               <div className="game-over-icon">⏰</div>
-              <h2 className="game-over-title">Oops !! Time's Up !!</h2>
+              <h2 className="game-over-title">Time's up</h2>
               <p className="game-over-text">
-                We'll have to move on to the next question now...
+                You keep the marks you've earned on this question so far.
               </p>
 
               <div className="final-score">
-                <span className="final-label">Current Score</span>
+                <span className="final-label">Marks for this question</span>
                 <span className="final-value">{totalScore}</span>
               </div>
 

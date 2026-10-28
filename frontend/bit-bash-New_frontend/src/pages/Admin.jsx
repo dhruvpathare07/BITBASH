@@ -6,7 +6,6 @@ const COLUMNS = [
   { key: "rank", label: "#", sortable: false },
   { key: "name", label: "Name", sortable: true },
   { key: "className", label: "Class", sortable: true },
-  { key: "language", label: "Language", sortable: true },
   { key: "round1", label: "Round 1", sortable: true, num: true },
   { key: "round2", label: "Round 2", sortable: true, num: true },
   { key: "total", label: "Total", sortable: true, num: true },
@@ -159,6 +158,68 @@ export default function Admin() {
   const arrow = (key) =>
     sort.key === key ? (sort.dir === "asc" ? " ▲" : " ▼") : "";
 
+  // One table per language; rows saved before language was tracked go last
+  const groups = [
+    { id: "python", title: "Python", rows: sortedRows.filter((r) => r.language === "python") },
+    { id: "c", title: "C", rows: sortedRows.filter((r) => r.language === "c") },
+    {
+      id: "unknown",
+      title: "Language not recorded",
+      rows: sortedRows.filter((r) => r.language !== "python" && r.language !== "c"),
+    },
+  ].filter((g) => g.id !== "unknown" || g.rows.length > 0);
+
+  const renderTable = (group) => (
+    <section className="admin-group" key={group.id} aria-labelledby={`grp-${group.id}`}>
+      <div className="admin-group-head">
+        <h2 className={`admin-group-title lang-${group.id}`} id={`grp-${group.id}`}>
+          {group.title}
+        </h2>
+        <span className="admin-group-count">
+          {group.rows.length} player{group.rows.length === 1 ? "" : "s"}
+        </span>
+      </div>
+      <div className="admin-table-wrap">
+        <table className="admin-table">
+          <thead>
+            <tr>
+              {COLUMNS.map((c) => (
+                <th
+                  key={c.key}
+                  className={`${c.num ? "num" : ""} ${c.sortable ? "sortable" : ""}`}
+                  onClick={c.sortable ? () => toggleSort(c.key) : undefined}
+                >
+                  {c.label}
+                  {c.sortable ? arrow(c.key) : ""}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {group.rows.length === 0 && (
+              <tr>
+                <td colSpan={COLUMNS.length} className="admin-empty">
+                  No {group.title} players yet.
+                </td>
+              </tr>
+            )}
+            {group.rows.map((r, i) => (
+              <tr key={r.username}>
+                <td className="rank">{i + 1}</td>
+                <td>{r.name || r.username}</td>
+                <td>{r.className || "—"}</td>
+                <td className="num">{r.round1 ?? "—"}</td>
+                <td className="num">{r.round2 ?? "—"}</td>
+                <td className="num total">{withTotal(r)}</td>
+                <td>{fmtDate(r.updatedAt)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  );
+
   return (
     <div className="admin-page">
       <div className="admin-content">
@@ -178,51 +239,11 @@ export default function Admin() {
           </div>
         </div>
         <p className="admin-sub">
-          {rows.length} player{rows.length === 1 ? "" : "s"} · Round 1 /300 ·
-          Round 2 /100
+          {rows.length} player{rows.length === 1 ? "" : "s"} in total. Round 1 is out of 300,
+          Round 2 out of 100. Click a column heading to sort.
         </p>
 
-        <div className="admin-table-wrap">
-          <table className="admin-table">
-            <thead>
-              <tr>
-                {COLUMNS.map((c) => (
-                  <th
-                    key={c.key}
-                    className={`${c.num ? "num" : ""} ${
-                      c.sortable ? "sortable" : ""
-                    }`}
-                    onClick={c.sortable ? () => toggleSort(c.key) : undefined}
-                  >
-                    {c.label}
-                    {c.sortable ? arrow(c.key) : ""}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {sortedRows.length === 0 && (
-                <tr>
-                  <td colSpan={COLUMNS.length} className="admin-empty">
-                    No results yet.
-                  </td>
-                </tr>
-              )}
-              {sortedRows.map((r, i) => (
-                <tr key={r.username}>
-                  <td className="rank">{i + 1}</td>
-                  <td>{r.name || r.username}</td>
-                  <td>{r.className || "—"}</td>
-                  <td>{r.language ? r.language.toUpperCase() : "—"}</td>
-                  <td className="num">{r.round1 ?? "—"}</td>
-                  <td className="num">{r.round2 ?? "—"}</td>
-                  <td className="num total">{withTotal(r)}</td>
-                  <td>{fmtDate(r.updatedAt)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        {groups.map(renderTable)}
       </div>
     </div>
   );

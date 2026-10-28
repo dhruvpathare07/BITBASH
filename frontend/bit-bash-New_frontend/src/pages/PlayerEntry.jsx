@@ -26,6 +26,7 @@ export default function PlayerEntry() {
   const [className, setClassName] = useState("");
   const [avatar, setAvatar] = useState(null);
   const [error, setError] = useState("");
+  const [errorKey, setErrorKey] = useState(0);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -36,9 +37,10 @@ export default function PlayerEntry() {
     if (!fullName.trim() || !username.trim() || !className.trim() || avatar === null) {
       setError(
         avatar === null
-          ? "Please choose an avatar and fill in all fields."
-          : "Please fill in all fields."
+          ? "Pick an avatar and fill in every field to continue."
+          : "Fill in every field to continue."
       );
+      setErrorKey((k) => k + 1);
       return;
     }
     setError("");
@@ -71,82 +73,119 @@ export default function PlayerEntry() {
     navigate(routePath);
   };
 
+  const picked = avatars.find((a) => a.id === avatar);
+  const languageName = language === "c" ? "C" : "Python";
 
   return (
     <div className="entry-container">
-      {/* Main Title - Center */}
-      <h1>Welcome To Bit Bash Bonanza</h1>
+      <header className="entry-top">
+        <span className="entry-brand">Bit Bash Bonanza</span>
+        <span className="entry-lang">
+          Playing in <b>{languageName}</b>
+          <button type="button" className="entry-change" onClick={() => navigate("/", { replace: true })}>
+            Change
+          </button>
+        </span>
+      </header>
 
-      {/* Language Display Badge 👈 NEW */}
-      <div style={{
-        position: "absolute",
-        top: 30,
-        right: 30,
-        padding: "8px 16px",
-        background: language === "c" 
-          ? "linear-gradient(135deg, #4dd0ff, #2563eb)" 
-          : "linear-gradient(135deg, #2ecc71, #1e7f4f)",
-        borderRadius: "20px",
-        fontSize: "0.9rem",
-        fontWeight: "600",
-        textTransform: "uppercase",
-        letterSpacing: "1px",
-        zIndex: 100
-      }}>
-        {language.toUpperCase()}
-      </div>
+      <main className="entry-main">
+        <div className="entry-heading">
+          <h1>Create your player card</h1>
+          <p>This is how you'll appear on the scoreboard.</p>
+        </div>
 
-      {/* Content Wrapper - Avatar & Form Side by Side */}
-      <div className="content-wrapper">
-        {/* Avatar Selector - Left Side */}
-        <div className="avatar-section">
-          <h3>Choose Avatar</h3>
-          <div className="avatar-grid">
-            {avatars.map((a) => (
-              <button
-                key={a.id}
-                className={avatar === a.id ? "avatar selected" : "avatar"}
-                onClick={() => setAvatar(a.id)}
-                title={a.label}
-              >
-                <span className="avatar-emoji">{a.emoji}</span>
-              </button>
-            ))}
+        <form
+          className="entry-card"
+          onSubmit={(e) => {
+            e.preventDefault();
+            handleStart();
+          }}
+          noValidate
+        >
+          {/* Live preview */}
+          <aside className="id-card" aria-label="Player card preview">
+            <div className="id-card-top">
+              <span>Player</span>
+              <span className="id-card-lang">{languageName}</span>
+            </div>
+            <div className={`id-avatar ${picked ? "has-pick" : ""}`} key={avatar ?? "none"}>
+              {picked ? picked.emoji : "?"}
+            </div>
+            <div className="id-name">{fullName.trim() || "Your name"}</div>
+            <div className="id-meta">
+              <span>{className.trim() || "Class"}</span>
+              <span>@{username.trim() || "username"}</span>
+            </div>
+            <div className="id-barcode" aria-hidden="true" />
+          </aside>
+
+          {/* Details */}
+          <div className="entry-fields">
+            <label className="field">
+              <span className="field-label">Full name</span>
+              <input
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                placeholder="e.g. Riya Sharma"
+                autoComplete="name"
+                maxLength={80}
+              />
+            </label>
+
+            <div className="field-row">
+              <label className="field">
+                <span className="field-label">Class</span>
+                <input
+                  value={className}
+                  onChange={(e) => setClassName(e.target.value)}
+                  placeholder="e.g. TE-A"
+                  maxLength={40}
+                />
+              </label>
+
+              <label className="field">
+                <span className="field-label">Username</span>
+                <input
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  placeholder="Shown on the scoreboard"
+                  autoComplete="off"
+                  maxLength={60}
+                />
+              </label>
+            </div>
+
+            <fieldset className="avatar-section">
+              <legend className="field-label">Pick an avatar</legend>
+              <div className="avatar-grid">
+                {avatars.map((a) => (
+                  <button
+                    type="button"
+                    key={a.id}
+                    className={avatar === a.id ? "avatar-option selected" : "avatar-option"}
+                    onClick={() => setAvatar(a.id)}
+                    title={a.label}
+                    aria-label={a.label}
+                    aria-pressed={avatar === a.id}
+                  >
+                    <span className="avatar-emoji">{a.emoji}</span>
+                  </button>
+                ))}
+              </div>
+            </fieldset>
+
+            {error && (
+              <div className="entry-error" role="alert" key={errorKey}>
+                {error}
+              </div>
+            )}
+
+            <button type="submit" className="start-btn">
+              Start Round 1
+            </button>
           </div>
-        </div>
-
-        {/* Form Fields - Right Side */}
-        <div className="form-wrapper">
-          <input
-            placeholder="Full Name"
-            value={fullName}
-            onChange={(e) => setFullName(e.target.value)}
-          />
-
-          <input
-            placeholder="Class"
-            value={className}
-            onChange={(e) => setClassName(e.target.value)}
-          />
-
-          <input
-            placeholder="Username"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-          />
-        </div>
-      </div>
-
-      {/* Validation message */}
-      {error && <div className="entry-error" role="alert">{error}</div>}
-
-      {/* Start Button - Bottom */}
-      <div className="button-wrapper">
-        <button className="start-btn" onClick={handleStart}>
-          🚀 Start Game
-        </button>
-      </div>
+        </form>
+      </main>
     </div>
   );
 }
-  

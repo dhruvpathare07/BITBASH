@@ -1,402 +1,358 @@
-/* Code Assembler - Clean Professional Styles */
+/* ============================================================
+   Code assembler (Round 1, step 1 of solving)
+   Expected output on the left, draggable code lines on the right.
+   ============================================================ */
+
 .assembler {
-  margin-top: 24px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  animation: fadeIn 0.4s ease-out;
+  max-width: 1080px;
+  margin: 0 auto;
+  /* fade only: any transform here would make the floating
+     Expected output box scroll with the page */
+  animation: bb-fade 0.5s var(--ease-out) backwards;
 }
 
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(12px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.assembler-header {
+.assembler-loading {
+  padding: 60px;
   text-align: center;
-  margin-bottom: 24px;
+  color: var(--text-secondary);
 }
 
-.header-icon {
-  display: none;
+/* ---------- Heading row ---------- */
+.assembler-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 18px;
 }
 
 .assembler-title {
+  margin: 0 0 4px;
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.assembler-sub {
+  font-size: 15px;
+  color: var(--text-secondary);
+}
+
+.assembler-count {
+  flex-shrink: 0;
+  padding: 8px 14px;
+  font-size: 15px;
+  color: var(--text-secondary);
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  font-variant-numeric: tabular-nums;
+}
+
+.assembler-count b {
   font-size: 18px;
-  font-weight: 600;
-  color: #ffffff;
-  margin: 0 0 6px 0;
-  letter-spacing: 0.5px;
+  color: var(--success-green);
 }
 
-.assembler-subtitle {
-  font-size: 13px;
-  color: rgba(255, 255, 255, 0.5);
-  margin: 0;
+/* ---------- Two columns ---------- */
+.assembler-grid {
+  display: grid;
+  grid-template-columns: minmax(240px, 300px) 1fr;
+  gap: 20px;
+  align-items: start;
 }
 
-/* Code Container */
-.code-container {
-  display: flex;
-  background: #1a1f2e;
-  border-radius: 12px;
-  padding: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
-  max-width: 520px;
-  width: 100%;
-}
-
-/* Line Numbers */
-.line-numbers {
-  display: flex;
-  flex-direction: column;
-  padding-right: 12px;
-  border-right: 1px solid rgba(255, 255, 255, 0.08);
-  margin-right: 12px;
-}
-
-.line-number {
-  height: 46px;
+/* shared window chrome */
+.terminal-bar {
   display: flex;
   align-items: center;
-  justify-content: center;
-  font-family: 'SF Mono', 'Consolas', monospace;
-  font-size: 12px;
-  color: rgba(255, 255, 255, 0.3);
+  gap: 10px;
+  height: 36px;
+  padding: 0 14px;
+  font-size: 13px;
   font-weight: 500;
-  margin: 3px 0;
-  min-width: 20px;
+  color: var(--text-secondary);
+  background: var(--panel-raised);
+  border-bottom: 1px solid var(--line);
 }
 
-/* Blocks Area */
-.blocks-area {
-  flex: 1;
+.terminal-dots {
+  display: inline-flex;
+  gap: 5px;
+}
+.terminal-dots i {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--line-strong);
+}
+.terminal-dots i:first-child { background: var(--accent-pink); }
+.terminal-dots i:nth-child(2) { background: var(--primary-purple); }
+
+.terminal-lang {
+  margin-left: auto;
+  padding: 2px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: var(--primary-glow);
+  background: rgba(139, 92, 255, 0.14);
+  border-radius: 3px;
+}
+
+/* ---------- Expected output terminal ---------- */
+.expected-output-box {
+  position: sticky;
+  top: calc(64px + 20px);
+  overflow: hidden;
+  background: var(--panel-sunken);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  transition: border-color 0.4s;
+}
+
+.expected-output-box pre {
+  margin: 0;
+  padding: 16px;
+  max-height: calc(100vh - 220px);
+  overflow: auto;
+  font-family: var(--font-code);
+  font-size: 13.5px;
+  line-height: 1.65;
+  color: var(--success-green);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* blinking cursor after the output */
+.expected-output-box pre::after {
+  content: "";
+  display: inline-block;
+  width: 8px;
+  height: 15px;
+  margin-left: 2px;
+  vertical-align: -2px;
+  background: var(--success-green);
+  animation: cursorBlink 1s steps(2) infinite;
+}
+
+@keyframes cursorBlink {
+  50% { opacity: 0; }
+}
+
+/* drag by the title bar */
+.drag-handle {
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+.drag-handle:active { cursor: grabbing; }
+
+.drag-grip {
+  margin-left: auto;
+  font-size: 13px;
+  letter-spacing: -2px;
+  color: var(--text-faint);
+}
+.drag-handle:hover .drag-grip { color: var(--accent-pink); }
+
+/* once dragged, it floats wherever it was dropped */
+.expected-output-box.moved {
+  position: fixed;
+  z-index: 80;
+  width: 300px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55);
+  border-color: var(--line-strong);
+}
+.expected-output-box.moved pre {
+  max-height: 50vh;
+}
+
+/* keep the code in its own column even when the box floats away */
+.code-window {
+  grid-column: 2;
+}
+
+.expected-output-box.solved {
+  border-color: rgba(62, 240, 176, 0.6);
+}
+
+/* "Output matched" overlay, shown once then fades */
+.celebration-overlay {
+  position: absolute;
+  inset: 36px 0 0 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: rgba(17, 13, 34, 0.86);
+  backdrop-filter: blur(2px);
+  pointer-events: none;
+  animation: celebrate 2.2s var(--ease-out) forwards;
+}
+
+.celebration-overlay.hidden {
+  display: none;
+}
+
+.celebration-overlay .clap {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--bg-main);
+  background: var(--success-green);
+  border-radius: 50%;
+  animation: bb-pop 0.5s var(--ease-spring) both;
+}
+
+.celebration-text {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--success-green);
+}
+
+@keyframes celebrate {
+  0%, 70% { opacity: 1; }
+  100%    { opacity: 0; }
+}
+
+/* ---------- Code window ---------- */
+.code-window {
+  background: var(--panel-sunken);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.code-list {
+  list-style: none;
+  margin: 0;
+  padding: 10px;
   display: flex;
   flex-direction: column;
   gap: 6px;
 }
 
-/* Code Blocks - UNIFORM SIZE */
 .code-block {
-  font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;  
-  font-size: large;
-  display: flex;
-  text-align: center;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  background: #252b3d;
-  padding: 12px 14px;
-  border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  cursor: grab;
-  transition: all 0.15s ease;
+  --accent: var(--line-strong);
   position: relative;
-  /* UNIFORM HEIGHT for all blocks */
-  min-height: 46px;
-  height: auto;              /* 🔑 allow growth */
-  width: 40%;
-  margin: 5px auto;
-  overflow-wrap: break-word;
+  display: grid;
+  grid-template-columns: 34px 1fr auto;
+  align-items: center;
+  min-height: 42px;
+  padding-right: 12px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--accent);
+  border-radius: 3px;
+  cursor: grab;
+  user-select: none;
+  /* the entrance stays first in every animation list below so it
+     never replays when a state class is added or removed */
+  --enter: lineIn 0.4s var(--ease-out) calc(var(--i, 0) * 35ms) backwards;
+  animation: var(--enter);
+  transition:
+    background 0.2s,
+    border-color 0.2s,
+    transform 0.2s var(--ease-out),
+    box-shadow 0.2s,
+    opacity 0.2s;
+}
+
+@keyframes lineIn {
+  from { opacity: 0; transform: translateX(-10px); }
+  to   { opacity: 1; transform: none; }
 }
 
 .code-block:hover {
-  background: #2d3548;
-  border-color: rgba(255, 255, 255, 0.12);
-  transform: translateY(-1px);
+  background: var(--panel-raised);
+  border-color: var(--line-strong);
+  border-left-color: var(--accent);
+  transform: translateX(3px);
 }
 
-.code-block:active {
-  cursor: grabbing;
+.code-block:active { cursor: grabbing; }
+
+.line-no {
+  font-family: var(--font-code);
+  font-size: 12px;
+  text-align: center;
+  color: var(--text-faint);
+  font-variant-numeric: tabular-nums;
 }
 
-.code-block.dragging {
-  opacity: 0.6;
-  transform: scale(0.98);
-  cursor: grabbing;
+.line-code {
+  font-family: var(--font-code);
+  font-size: 14.5px;
+  line-height: 1.5;
+  color: var(--text-primary);
+  white-space: pre;
+  overflow-x: auto;
+  padding: 8px 0 8px calc(var(--indent, 0) * 1ch);
+  transition: padding-left 0.55s var(--ease-spring);
+  transition-delay: calc(var(--i, 0) * 40ms);
 }
 
-.code-block.correct {
-  background: #1eb97b;
-  border-color: rgba(46, 204, 113, 0.25);
-  color: #1a1f2e;
-  font-weight: 600;
-}
-
-.block-grip {
-  color: rgba(255, 255, 255, 0.25);
-  font-size: 14px;
-  user-select: none;
-  transition: color 0.15s ease;
-  flex-shrink: 0;
-}
-
-.code-block:hover .block-grip {
-  color: rgba(255, 255, 255, 0.4);
-}
-
-.code-block.correct .block-grip {
-  color: rgba(46, 204, 113, 0.4);
-}
-
-/*.block-code {
-  font-family: 'SF Mono', 'Consolas', 'Monaco', monospace;
+.grip {
   font-size: 13px;
-  color: #e2e8f0;
-  flex: 1;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}*/
-
-.block-code {
-  font-family: 'SF Mono', 'Consolas', 'Monaco', monospace;
-  font-size: 13px;
-  color: #e2e8f0;
-
-  white-space: pre-wrap;   /* ✅ allows wrapping */
-  word-break: break-word; /* ✅ breaks long tokens */
-  overflow-wrap: anywhere;
-
-  text-align: left;        /* better readability */
-  line-height: 1.4;
-}
-
-
-.correct-indicator {
-  width: 20px;
-  height: 20px;
-  background: #2ecc71;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 11px;
-  color: #fff;
-  flex-shrink: 0;
-  animation: indicatorPop 0.25s ease-out;
-}
-
-@keyframes indicatorPop {
-  0% { transform: scale(0); }
-  60% { transform: scale(1.1); }
-  100% { transform: scale(1); }
-}
-
-/* Success Message */
-.success-msg {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-top: 20px;
-  padding: 14px 24px;
-  background: #1e3a2f;
-  border-radius: 10px;
-  border: 1px solid rgba(46, 204, 113, 0.2);
-  animation: successSlide 0.4s ease-out;
-}
-
-@keyframes successSlide {
-  from { 
-    opacity: 0; 
-    transform: translateY(10px); 
-  }
-  to { 
-    opacity: 1; 
-    transform: translateY(0); 
-  }
-}
-
-.success-icon {
-  font-size: 20px;
-}
-
-.success-text {
-  font-size: 14px;
-  font-weight: 600;
-  color: #2ecc71;
-  letter-spacing: 0.3px;
-}
-
-/* Hide particles for cleaner look */
-.success-particles {
-  display: none;
-}
-/* Expected Output Box */
-
-
-.assembler-layout {
-  display: flex;
-  gap: 24px;
-}
-
-.code-blocks-area {
-  flex: 2;
-}
-
-/* Expected Output Panel — Theme Aligned Professional Style */
-.expected-output-box {
-  position: absolute;
-  left: 40px;
-  top: 220px;
-  width: 280px;
-  max-height: 280px;
-  padding: 20px;
-  border-radius: 18px;
-  background: linear-gradient(145deg, #1a1f35, #12172a);
-  border: 2px solid rgba(124, 92, 255, 0.4);
-  box-shadow: 
-    0 0 30px rgba(124, 92, 255, 0.2),
-    0 8px 32px rgba(0, 0, 0, 0.4),
-    inset 0 1px 0 rgba(255, 255, 255, 0.05);
-  display: flex;
-  flex-direction: column;
-  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-  overflow: hidden;
-  backdrop-filter: blur(10px);
-}
-
-/* Hover effect for elegance */
-.expected-output-box:hover {
-  border-color: rgba(124, 92, 255, 0.6);
-  box-shadow: 
-    0 0 40px rgba(124, 92, 255, 0.3),
-    0 12px 48px rgba(0, 0, 0, 0.5),
-    inset 0 1px 0 rgba(255, 255, 255, 0.08);
-  transform: translateY(-2px);
-}
-
-/* Header */
-.expected-output-box h3 {
-  font-size: 14px;
-  font-weight: 800;
-  color: #a88bff;
-  margin: 0 0 14px 0;
-  letter-spacing: 1.2px;
-  text-transform: uppercase;
-  text-shadow: 0 0 10px rgba(124, 92, 255, 0.6);
-}
-
-/* Output content */
-.expected-output-box pre {
-  flex: 1;
-  background: #0f1320;
-  border-radius: 12px;
-  padding: 14px;
-  margin: 0;
-  font-family: 'SF Mono', 'Consolas', monospace;
-  font-size: 14px;
-  color: #cbd5e1;
-  line-height: 1.6;
-  white-space: pre-wrap;
-  overflow-y: auto;
-  border: 1px solid rgba(124, 92, 255, 0.2);
-  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.4);
-}
-
-/* Scrollbar styling for elegance */
-.expected-output-box pre::-webkit-scrollbar {
-  width: 6px;
-}
-
-.expected-output-box pre::-webkit-scrollbar-track {
-  background: rgba(124, 92, 255, 0.08);
-  border-radius: 10px;
-}
-
-.expected-output-box pre::-webkit-scrollbar-thumb {
-  background: rgba(124, 92, 255, 0.4);
-  border-radius: 10px;
-  transition: background 0.2s ease;
-}
-
-.expected-output-box pre::-webkit-scrollbar-thumb:hover {
-  background: rgba(124, 92, 255, 0.6);
-}
-
-/* Glow when solved */
-.expected-output-box.solved {
-  border-color: rgba(46, 204, 113, 0.8);
-  box-shadow: 
-    0 0 40px rgba(46, 204, 113, 0.4),
-    0 12px 48px rgba(46, 204, 113, 0.2),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1),
-    inset 0 0 20px rgba(46, 204, 113, 0.15);
-  animation: solvedGlow 0.6s ease-out;
-}
-
-/* Fade out after celebration */
-.expected-output-box.fade-out {
+  letter-spacing: -2px;
+  color: var(--text-faint);
   opacity: 0;
-  transform: scale(0.95);
-  pointer-events: none;
+  transition: opacity 0.2s;
+}
+.code-block:hover .grip { opacity: 1; }
+
+/* In the right spot */
+.code-block.correct {
+  --accent: var(--success-green);
+  background: rgba(62, 240, 176, 0.07);
+  border-color: rgba(62, 240, 176, 0.28);
+  animation: var(--enter), lineCorrect 0.6s ease-out;
+}
+.code-block.correct .line-no { color: var(--success-green); }
+
+@keyframes lineCorrect {
+  0%   { box-shadow: 0 0 0 0 rgba(62, 240, 176, 0.45); }
+  100% { box-shadow: 0 0 0 8px rgba(62, 240, 176, 0); }
 }
 
-/* Celebration overlay */
-.celebration-overlay {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: radial-gradient(circle, rgba(34, 211, 238, 0.2), transparent 60%);
-  animation: softPulse 2.8s ease-out;
+/* Being dragged */
+.code-block.dragging {
+  opacity: 0.4;
+  transform: scale(0.98);
+  border-style: dashed;
 }
 
-.hidden {
-  display: none;
+/* Where it will land */
+.code-block.drag-over {
+  --accent: var(--accent-pink);
+  background: rgba(255, 79, 176, 0.1);
+  border-color: rgba(255, 79, 176, 0.5);
+  transform: translateX(6px);
 }
 
-/* Clap animation */
-.clap {
-  font-size: 2.5rem;
-  animation: clapPop 8s ease-out forwards;
+/* Just landed */
+.code-block.just-dropped {
+  animation: var(--enter), lineDrop 0.45s var(--ease-spring);
+}
+.code-block.correct.just-dropped {
+  animation: var(--enter), lineCorrect 0.6s ease-out, lineDrop 0.45s var(--ease-spring);
 }
 
-/* Confetti particles */
-.confetti::before,
-.confetti::after {
-  content: "✨ ✨ ✨";
-  position: absolute;
-  font-size: 1.2rem;
-  animation: confettiFall 2.8s ease-out forwards;
-  opacity: 0.8;
+@keyframes lineDrop {
+  0%   { transform: scale(1.03); background: rgba(255, 79, 176, 0.18); }
+  100% { transform: none; }
 }
 
-.confetti::after {
-  content: "🎉 ✨ 🎉";
-  animation-delay: 0.4s;
+/* Solved: lines are locked, cursor goes back to normal */
+.assembler.is-done .code-block {
+  cursor: default;
 }
-
-/* Animations */
-@keyframes clapPop {
-  0% { transform: scale(0.4); opacity: 0; }
-  60% { transform: scale(1.1); opacity: 1; }
-  100% { transform: scale(1); opacity: 0; }
-}
-
-@keyframes confettiFall {
-  0% { transform: translateY(-10px); opacity: 0; }
-  100% { transform: translateY(20px); opacity: 1; }
-}
-
-@keyframes softPulse {
-  0% { opacity: 0; }
-  100% { opacity: 1; }
-}
-
-@keyframes solvedGlow {
-  0% {
-    box-shadow: 
-      0 12px 48px rgba(46, 204, 113, 0.1),
-      0 0 10px rgba(46, 204, 113, 0.2);
-  }
-  100% {
-    box-shadow: 
-      0 0 40px rgba(46, 204, 113, 0.4),
-      0 12px 48px rgba(46, 204, 113, 0.2),
-      inset 0 1px 0 rgba(255, 255, 255, 0.1),
-      inset 0 0 20px rgba(46, 204, 113, 0.15);
-  }
+.assembler.is-done .code-block:hover {
+  transform: none;
+  background: rgba(62, 240, 176, 0.07);
 }

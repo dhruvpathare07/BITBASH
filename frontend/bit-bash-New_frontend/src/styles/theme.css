@@ -1,43 +1,116 @@
 /* ============================================================
-   Bit Bash Bonanza - shared cyberpunk theme (pink + purple)
-   Single source of truth for colors. Every page/component
-   should use these tokens so the UI looks the same everywhere.
+   Bit Bash Bonanza - shared cyberpunk theme (pink + violet)
+   Single source of truth for colors, fonts and motion.
+   Page stylesheets must NOT redefine these in their own :root.
    ============================================================ */
 
+/* ---- Fonts (self-hosted so the event runs offline) ---- */
+@font-face {
+  font-family: 'Chakra Petch';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('../assets/fonts/chakra-petch-400.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Chakra Petch';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('../assets/fonts/chakra-petch-500.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Chakra Petch';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('../assets/fonts/chakra-petch-600.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Chakra Petch';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('../assets/fonts/chakra-petch-700.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url('../assets/fonts/jetbrains-mono-var.woff2') format('woff2');
+}
+
 :root {
-  /* Backgrounds */
-  --bg-main: #0b0f1a;
-  --bg-deep: #080d1b;
-  --bg-card: #12172a;
-  --panel: #12172a;
+  /* Type */
+  --font-ui: 'Chakra Petch', 'Segoe UI', system-ui, sans-serif;
+  --font-code: 'JetBrains Mono', 'Cascadia Code', Consolas, monospace;
 
-  /* Core cyberpunk accents (pink + purple lead) */
-  --primary-purple: #7c5cff;
-  --primary-glow: #a88bff;
-  --accent-pink: #ff4ecd;
-  --accent-blue: #4dd0ff;
-  --accent-cyan: #5be7ff;
+  /* Backgrounds: violet-black, not blue-black */
+  --bg-main: #0d0a1a;
+  --bg-deep: #08060f;
+  --bg-card: #17122c;
+  --panel: #17122c;
+  --panel-raised: #201a3a;
+  --panel-sunken: #110d22;
 
-  /* Status */
-  --success-green: #2ecc71;
-  --success-dark: #1e7f4f;
-  --warning-orange: #f39c12;
+  /* Pink = the action to take. Violet = structure and focus. */
+  --accent-pink: #ff4fb0;
+  --pink-deep: #d6268a;
+  --primary-purple: #8b5cff;
+  --primary-glow: #b49cff;
+
+  /* Kept for the Round 2 maze, used sparingly elsewhere */
+  --accent-blue: #6fd3ff;
+  --accent-cyan: #7de8ff;
+
+  /* State colors: only ever mean correct / time / wrong */
+  --success-green: #3ef0b0;
+  --success-dark: #12a877;
+  --warning-orange: #ffb547;
+  --danger: #ff5470;
 
   /* Text */
-  --text-primary: #ffffff;
-  --text-secondary: #a0aec0;
-  --text-light: rgba(255, 255, 255, 0.8);
-  --text-lighter: rgba(255, 255, 255, 0.5);
+  --text-primary: #f2eeff;
+  --text-secondary: #a79fc9;
+  --text-faint: #6e6690;
+  --text-light: rgba(242, 238, 255, 0.82);
+  --text-lighter: rgba(242, 238, 255, 0.55);
 
   /* Lines */
-  --border-color: rgba(124, 92, 255, 0.3);
+  --line: rgba(167, 139, 250, 0.16);
+  --line-strong: rgba(167, 139, 250, 0.34);
+  --border-color: rgba(139, 92, 255, 0.3);
 
-  /* Signature gradient (pink -> purple) */
+  /* Signature gradient */
   --grad-neon: linear-gradient(90deg, var(--accent-pink), var(--primary-purple));
 
-  /* ---- Aliases used by the Round 2 maze files ----
-     Kept pointing at the canonical values above so those
-     pages share one palette instead of their own. */
+  /* HUD corner brackets: use as a background layer, e.g.
+     background: var(--hud-corners), var(--panel); */
+  --hud-corners:
+    linear-gradient(#8b5cff, #8b5cff) left top / 18px 2px no-repeat,
+    linear-gradient(#8b5cff, #8b5cff) left top / 2px 18px no-repeat,
+    linear-gradient(#8b5cff, #8b5cff) right bottom / 18px 2px no-repeat,
+    linear-gradient(#8b5cff, #8b5cff) right bottom / 2px 18px no-repeat;
+  --hud-corners-pink:
+    linear-gradient(#ff4fb0, #ff4fb0) left top / 18px 2px no-repeat,
+    linear-gradient(#ff4fb0, #ff4fb0) left top / 2px 18px no-repeat,
+    linear-gradient(#ff4fb0, #ff4fb0) right bottom / 18px 2px no-repeat,
+    linear-gradient(#ff4fb0, #ff4fb0) right bottom / 2px 18px no-repeat;
+
+  /* Cut-corner shape for buttons and badges */
+  --cut: 10px;
+  --chamfer: polygon(
+    var(--cut) 0, 100% 0,
+    100% calc(100% - var(--cut)), calc(100% - var(--cut)) 100%,
+    0 100%, 0 var(--cut)
+  );
+
+  /* Motion */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* ---- Aliases used by the Round 2 maze files ---- */
   --bg: var(--bg-main);
   --purple: var(--primary-purple);
   --cyan: var(--accent-blue);
@@ -45,4 +118,82 @@
   --text: var(--text-primary);
   --muted: var(--text-secondary);
   --border: var(--border-color);
+}
+
+/* ============================================================
+   Shared animation library (bb- prefix avoids name clashes)
+   ============================================================ */
+
+/* Content arriving */
+@keyframes bb-rise {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* Use on wrappers that contain position:fixed children (no transform) */
+@keyframes bb-fade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes bb-pop {
+  0%   { opacity: 0; transform: scale(0.92); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+/* Wrong answer */
+@keyframes bb-shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-8px); }
+  40% { transform: translateX(7px); }
+  60% { transform: translateX(-5px); }
+  80% { transform: translateX(3px); }
+}
+
+/* Something locked in / was confirmed */
+@keyframes bb-flash {
+  0%   { box-shadow: 0 0 0 0 rgba(255, 79, 176, 0.7); }
+  100% { box-shadow: 0 0 0 18px rgba(255, 79, 176, 0); }
+}
+
+@keyframes bb-flash-mint {
+  0%   { box-shadow: 0 0 0 0 rgba(62, 240, 176, 0.6); }
+  100% { box-shadow: 0 0 0 14px rgba(62, 240, 176, 0); }
+}
+
+/* Light sweeping across a button */
+@keyframes bb-sweep {
+  from { transform: translateX(-120%) skewX(-20deg); }
+  to   { transform: translateX(220%) skewX(-20deg); }
+}
+
+/* Time is almost out */
+@keyframes bb-pulse-red {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255, 84, 112, 0); }
+  50%      { box-shadow: 0 0 0 6px rgba(255, 84, 112, 0.28); }
+}
+
+/* RGB-split glitch for the wordmark */
+@keyframes bb-glitch {
+  0%, 86%, 100% { text-shadow: 0 0 0 transparent, 0 0 0 transparent; transform: none; }
+  88% { text-shadow: -3px 0 #ff4fb0, 3px 0 #8b5cff; transform: translateX(1px); }
+  90% { text-shadow: 3px 0 #ff4fb0, -3px 0 #8b5cff; transform: translateX(-2px) skewX(-4deg); }
+  92% { text-shadow: -2px 0 #ff4fb0, 2px 0 #8b5cff; transform: none; }
+  94% { text-shadow: 0 0 0 transparent, 0 0 0 transparent; }
+}
+
+/* Slow drift of the background grid */
+@keyframes bb-grid-drift {
+  from { background-position: 0 0, 0 0; }
+  to   { background-position: 0 56px, 56px 0; }
+}
+
+/* Respect people who turn motion off */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

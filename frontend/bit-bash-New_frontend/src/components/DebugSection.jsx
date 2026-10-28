@@ -1,15 +1,14 @@
 'use client';
 
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect, useRef } from "react";
 import "./DebugSection.css";
 import { PYTHON_BUGGY_CODE } from "../data/pythonBuggyCode";
 import { C_BUGGY_CODE } from "../data/cBuggyCode"; // added
 import { API_BASE } from "../config";
 
-export default function DebugSection({ topic, score, onScoreChange, onSuccess, onGiveUp, language = "python" }) {
-  const navigate = useNavigate();
+const INDENT = "    ";
 
+export default function DebugSection({ topic, onScoreChange, onSuccess, onGiveUp, language = "python" }) {
   const [code, setCode] = useState("");
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -19,54 +18,8 @@ export default function DebugSection({ topic, score, onScoreChange, onSuccess, o
   const [showFixedModal, setShowFixedModal] = useState(false);
   const [showGiveUpModal, setShowGiveUpModal] = useState(false);
 
-  // const [comboCount, setComboCount] = useState(0);
-  // const [comboMultiplier, setComboMultiplier] = useState(1);
-  // const [showComboUI, setShowComboUI] = useState(false);
-
-
-  //const [scoreTick, setScoreTick] = useState(0);
-
-
-  
-  
-
-  const profile = JSON.parse(
-  sessionStorage.getItem("playerProfile") || "{}"
-);
-
-//   const getComboMultiplier = (count) => {
-//   if (count >= 5) return 2;
-//   if (count >= 3) return 1.5;
-//   return 1;
-// };
-
-
-/*const getGame = () =>
-  JSON.parse(sessionStorage.getItem("gameSession")) || { score: 0 };
-
-const updateScore = (delta) => {
-  const game = getGame();
-  const updated = Math.max(game.score + delta, 0);
-  sessionStorage.setItem(
-    "gameSession",
-    JSON.stringify({ ...game, score: updated })
-  );
-  setScoreTick(t => t + 1); // force re-render
-};
-*/
-
-
-  const avatars = [
-    { id: 0, emoji: "🐶" }, { id: 1, emoji: "🐱" },
-    { id: 2, emoji: "🦊" }, { id: 3, emoji: "🐼" },
-    { id: 4, emoji: "🐸" }, { id: 5, emoji: "🐯" },
-    { id: 6, emoji: "😄" }, { id: 7, emoji: "😎" },
-    { id: 8, emoji: "🤓" }, { id: 9, emoji: "🥳" },
-    { id: 10, emoji: "😈" }, { id: 11, emoji: "🤩" }
-  ];
-
-  const selectedAvatar =
-    avatars.find(a => a.id === profile.avatar)?.emoji || "🙂";
+  const gutterRef = useRef(null);
+  const escapedRef = useRef(false);
 
   useEffect(() => {
     const source = language === "c" ? C_BUGGY_CODE : PYTHON_BUGGY_CODE;
@@ -82,265 +35,227 @@ const updateScore = (delta) => {
   }, [topic, language]);
 
   const handleCheck = async () => {
-  const nextAttempts = attempts + 1;
-  setAttempts(nextAttempts);
-  setLoading(true);
+    const nextAttempts = attempts + 1;
+    setAttempts(nextAttempts);
+    setLoading(true);
 
-  try {
-    const res = await fetch(`${API_BASE}/evaluate`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        topic,
-        code,
-        attempts: nextAttempts,
-        language
-      }),
-    });
+    try {
+      const res = await fetch(`${API_BASE}/evaluate`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          topic,
+          code,
+          attempts: nextAttempts,
+          language
+        }),
+      });
 
-    const data = await res.json();
-    setResult(data);
+      const data = await res.json();
+      setResult(data);
 
-    const newProgress = Number(data.progress) || 0;
+      const newProgress = Number(data.progress) || 0;
+      setProgress(newProgress);
+      onScoreChange(newProgress);
 
-
-    setProgress(newProgress);
-
-    // 🔥 THIS is the important line
-    onScoreChange(newProgress);
-
-    if (data.finalStatus === "SUCCESS") {
-      setAllFixed(true);
+      if (data.finalStatus === "SUCCESS") {
+        setAllFixed(true);
+      }
+    } catch {
+      setResult({ success: false, message: "Couldn't reach the checker. Make sure the backend is running, then try again." });
     }
 
-  } catch {
-    setResult({ success: false, message: "Server error" });
-  }
+    setLoading(false);
+  };
 
-  setLoading(false);
-};
+  // Tab indents like a real editor. Press Esc first to Tab out of the editor.
+  const handleKeyDown = (e) => {
+    if (e.key === "Escape") {
+      escapedRef.current = true;
+      return;
+    }
+    if (e.key !== "Tab" || escapedRef.current) {
+      escapedRef.current = false;
+      return;
+    }
+    e.preventDefault();
+    const el = e.target;
+    const { selectionStart: start, selectionEnd: end } = el;
+    const next = code.slice(0, start) + INDENT + code.slice(end);
+    setCode(next);
+    requestAnimationFrame(() => {
+      el.selectionStart = el.selectionEnd = start + INDENT.length;
+    });
+  };
 
-  // const getGame = () =>
-  // JSON.parse(sessionStorage.getItem("gameSession")) || { score: 0 };
+  const syncGutter = (e) => {
+    if (gutterRef.current) gutterRef.current.scrollTop = e.target.scrollTop;
+  };
 
-// const updateScore = (delta) => {
-//   const game = getGame();
-//   const updated = Math.max(game.score + delta, 0);
-
-//   sessionStorage.setItem(
-//     "gameSession",
-//     JSON.stringify({ ...game, score: updated })
-//   );
-
-//   // keep parent UI in sync
-//   onScoreChange(updated);
-// };
-
-
-
-  const renderCompilerErrors = () => {
-  if (!result || !result.wrongLines || result.wrongLines.length === 0) return null;
-
-  return (
-    <div className="compiler-box">
-      <div className="compiler-header">⚠ Problems</div>
-
-      {result.wrongLines.map((err, idx) => (
-        <div key={idx} className="compiler-error">
-          <span className="line-number">Line {err.line}</span>
-          {err.errorType !== "HINT_LOCKED" && (
-  <span className={`error-type ${err.errorType.toLowerCase()}`}>
-    {err.errorType}
-  </span>
-)}
-
-          <div className="error-message">{err.message}</div>
-          {err.expected && (
-  <pre className="expected-line">
-    Expected: {err.expected}
-  </pre>
-)}
-
-        </div>
-      ))}
-    </div>
-  );
-};
-
-
+  const lineCount = Math.max(1, code.split("\n").length);
+  const fileName = language === "c" ? "main.c" : "main.py";
+  const attemptsLeft = Math.max(0, 3 - attempts);
 
   return (
-    <div className="debug-section">
-      <div className="code-editor-wrapper">
-        <div className="code-editor-header">
-          <span>🐞</span>
-          <span className="editor-title">Debug the Code - {language.toUpperCase()} Editor</span>
-        </div>
-        <textarea
-          className="code-editor"
-          value={code}
-          onChange={(e) => setCode(e.target.value)}
-          spellCheck="false"
-        />
+    <div className="debug-section debug-workbench">
+      <div className="debug-intro">
+        <h3 className="debug-heading">Fix the bugs</h3>
+        <p className="debug-sub">
+          Edit the code below, then run the check. You can run it as many times as you like.
+        </p>
       </div>
 
-      <button className="check-btn" onClick={handleCheck} disabled={loading}>
-        {loading ? "🔄 Checking..." : "▶ Run Debug Check"}
-      </button>
-
-      {/* 🔥 Combo Feedback */}
-{/*{showComboUI && comboMultiplier > 1 && (
-  <div className={`combo-pop combo-${comboMultiplier}`}>
-    {comboMultiplier === 1.5 && "🔥 Combo x1.5!"}
-    {comboMultiplier === 2 && "⚡ Combo x2!"}
-  </div>
-)}*/}
-
-
-      {/* Progress */}
-      <div className="progress-wrapper">
-        <div className="progress-label">
-          <span>Debug Progress</span>
-          <span className="progress-percentage">{progress}%</span>
+      <div className="code-editor-wrapper">
+        <div className="code-editor-header">
+          <span className="editor-tab">
+            <span className="editor-dot" aria-hidden="true" />
+            <span className="editor-title">{fileName}</span>
+          </span>
+          <span className="editor-hint">Tab adds an indent. Press Esc, then Tab, to leave the editor.</span>
         </div>
-        <div className="progress-bar-bg">
-          <div
-            className="progress-bar-fill"
-            style={{ width: `${progress}%` }}
+
+        <div className="code-editor-body">
+          <div className="code-gutter" ref={gutterRef} aria-hidden="true">
+            {Array.from({ length: lineCount }, (_, i) => (
+              <span key={i}>{i + 1}</span>
+            ))}
+          </div>
+          <textarea
+            className="code-editor"
+            value={code}
+            onChange={(e) => setCode(e.target.value)}
+            onKeyDown={handleKeyDown}
+            onScroll={syncGutter}
+            wrap="off"
+            spellCheck="false"
+            aria-label={`Code editor, ${fileName}`}
           />
         </div>
       </div>
 
-      {/* Result */}
-      {result && (
-  <div className={`result-box ${result.success ? "success" : "error"}`}>
-    {result.success ? "✅ " : "❌ "} {result.message}
-  </div>
-)}
+      <div className="debug-toolbar">
+        <button className={`check-btn ${loading ? "is-loading" : ""}`} onClick={handleCheck} disabled={loading}>
+          {loading ? "Checking…" : "Run check"}
+        </button>
 
-      {/* Action Buttons */}
+        <div className="progress-wrapper">
+          <div className="progress-label">
+            <span>Progress</span>
+            <span className="progress-percentage">{progress}%</span>
+          </div>
+          <div className="progress-bar-bg">
+            <div
+              className={`progress-bar-fill ${progress >= 100 ? "full" : ""}`}
+              style={{ width: `${progress}%` }}
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Result (keyed on attempts so it re-animates on every run) */}
+      {result && (
+        <div
+          key={attempts}
+          className={`result-box ${result.success ? "success" : "error"}`}
+          role="status"
+        >
+          <span className="result-icon" aria-hidden="true">{result.success ? "✓" : "✕"}</span>
+          {/* the checker prefixes its own emoji; the icon already shows the state */}
+          <span>{String(result.message || "").replace(/^[^\p{L}\p{N}(]+/u, "")}</span>
+        </div>
+      )}
+
       <div className="debug-actions">
         <button
           className="debug-btn success"
           disabled={!allFixed}
           onClick={() => setShowFixedModal(true)}
         >
-          ✓ Fixed It!
+          Submit fix
         </button>
 
         <button
-  className={`debug-btn fail ${
-    attempts < 3 || allFixed ? "disabled" : ""
-  }`}
-  disabled={attempts < 3 || allFixed}
-  title={
-    attempts < 3
-      ? `You need ${3 - attempts} more attempt(s) before giving up`
-      : allFixed
-      ? "Already fixed"
-      : "Give up"
-  }
-  onClick={() => {
-    if (attempts >= 3 && !allFixed) {
-      setShowGiveUpModal(true);
-    }
-  }}
->
-  ✕ Give Up
-</button>
+          className={`debug-btn fail ${attempts < 3 || allFixed ? "disabled" : ""}`}
+          disabled={attempts < 3 || allFixed}
+          title={
+            attempts < 3
+              ? `Run the check ${attemptsLeft} more time(s) before you can give up`
+              : allFixed
+              ? "Already fixed"
+              : "Give up"
+          }
+          onClick={() => {
+            if (attempts >= 3 && !allFixed) {
+              setShowGiveUpModal(true);
+            }
+          }}
+        >
+          Give up
+        </button>
 
+        {!allFixed && attempts < 3 && (
+          <span className="debug-note">
+            Give up unlocks after {attemptsLeft} more check{attemptsLeft === 1 ? "" : "s"}
+          </span>
+        )}
       </div>
+
       {/* SUCCESS MODAL */}
       {showFixedModal && (
-  <div className="game-over-overlay">
-    <div className="game-over-modal success">
+        <div className="game-over-overlay">
+          <div className="game-over-modal success" role="dialog" aria-modal="true" aria-labelledby="fixed-title">
+            <div className="modal-glow" />
 
-      <div className="modal-glow" />
+            <div className="confetti">
+              {Array.from({ length: 30 }).map((_, i) => (
+                <span
+                  key={i}
+                  style={{
+                    left: `${Math.random() * 100}%`,
+                    animationDelay: `${Math.random() * 2}s`,
+                  }}
+                />
+              ))}
+            </div>
 
-      {/* 🎉 Confetti */}
-      <div className="confetti">
-        {Array.from({ length: 30 }).map((_, i) => (
-          <span
-            key={i}
-            style={{
-              left: `${Math.random() * 100}%`,
-              animationDelay: `${Math.random() * 2}s`,
-            }}
-          />
-        ))}
-      </div>
-
-      <div className="modal-content">
-        <div className="game-over-icon">🎉</div>
-
-        <h2 className="game-over-title">Well Done!</h2>
-
-        <p style={{ opacity: 0.8, marginBottom: "30px" }}>
-          You've Successfully Debugged The Code ...!!!
-        </p>
-
-        <button
-          className="restart-btn"
-          onClick={() => onSuccess(progress)}
-        >
-          Move to Next Question
-        </button>
-      </div>
-
-    </div>
-  </div>
-)}
-
-     {/* GIVE UP MODAL */}
-
-      {showGiveUpModal && (
-  <div className="game-over-overlay">
-    <div className="game-over-modal warning">
-
-      <div className="modal-glow" />
-
-      <div className="modal-content">
-        <div className="game-over-icon">⚠</div>
-
-        <h2 className="game-over-title">Give Up?</h2>
-
-        <p style={{ opacity: 0.8, marginBottom: "30px" }}>
-          Debugging is hard.  
-          But every attempt makes you better !!! 
-          <br /> Giving up will reduce your score.<br />
-              You won’t be able to retry this question.
-        </p>
-
-
-        <div className="modal-actions">
-          <button
-            className="restart-btn danger"
-            // onClick={() => {
-            //   updateScore(-20);
-            //   onGiveUp();
-            // }}
-            onClick={() => {
-  onGiveUp();
-}}
-
-          >
-            Yes, Give Up
-          </button>
-
-          <button
-            className="restart-btn"
-            onClick={() => setShowGiveUpModal(false)}
-          >
-            No, Continue Debugging
-          </button>
+            <div className="modal-content">
+              <div className="game-over-icon">🎉</div>
+              <h2 className="game-over-title" id="fixed-title">Well done!</h2>
+              <p>You fixed every bug in this question.</p>
+              <button className="restart-btn" onClick={() => onSuccess(progress)} autoFocus>
+                Continue
+              </button>
+            </div>
+          </div>
         </div>
-      </div>
+      )}
 
-    </div>
-  </div>
-)}
+      {/* GIVE UP MODAL */}
+      {showGiveUpModal && (
+        <div className="game-over-overlay">
+          <div className="game-over-modal warning" role="dialog" aria-modal="true" aria-labelledby="giveup-title">
+            <div className="modal-glow" />
 
+            <div className="modal-content">
+              <div className="game-over-icon">⚠</div>
+              <h2 className="game-over-title" id="giveup-title">Give up on this question?</h2>
+              <p>
+                You keep your assembly marks but lose the debug marks,
+                and you can't come back to this question.
+              </p>
 
+              <div className="modal-actions">
+                <button className="restart-btn" onClick={() => setShowGiveUpModal(false)} autoFocus>
+                  Keep debugging
+                </button>
+                <button className="restart-btn danger" onClick={() => onGiveUp()}>
+                  Give up
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

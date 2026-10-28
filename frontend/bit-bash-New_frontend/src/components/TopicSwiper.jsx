@@ -1,5 +1,5 @@
 "use client";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import "./TopicSwiper.css";
 
 /* 🔑 ICON MAP (scalable & clean) */
@@ -31,6 +31,13 @@ export default function TopicSwiper({ topics, onSelect }) {
   const [spinning, setSpinning] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(null);
 
+  // Start one full set in, so the reel has cards on both sides at rest
+  useEffect(() => {
+    if (containerRef.current) {
+      containerRef.current.style.transform = `translateX(-${TOPICS.length * 200}px)`;
+    }
+  }, [TOPICS.length]);
+
   const spin = () => {
     if (spinning) return;
     setSpinning(true);
@@ -52,19 +59,23 @@ export default function TopicSwiper({ topics, onSelect }) {
 
     setTimeout(() => {
       setSelectedIndex(randomIndex);
-      onSelect(TOPICS[randomIndex]);
       setSpinning(false);
+      // Hold the "locked in" moment briefly before moving on
+      setTimeout(() => onSelect(TOPICS[randomIndex]), 900);
     }, 4000);
   };
 
   return (
     <div className="swiper-wrapper">
       <div className="swiper-header">
-        <span className="swiper-icon">🎯</span>
-        <h3 className="swiper-title">Select Your Challenge</h3>
+        <h3 className="swiper-title">Spin to draw your challenge</h3>
       </div>
 
-      <div className="swiper-machine">
+      <div
+        className={`swiper-machine ${spinning ? "is-spinning" : ""} ${
+          !spinning && selectedIndex !== null ? "is-locked" : ""
+        }`}
+      >
         {/* Decorative lights */}
         <div className="machine-lights">
           {[1,2,3,4,5].map(i => (
@@ -84,7 +95,7 @@ export default function TopicSwiper({ topics, onSelect }) {
           <div className="window-overlay right"></div>
 
           <div className="swiper-track" ref={containerRef}>
-            {[...TOPICS, ...TOPICS, ...TOPICS, ...TOPICS, ...TOPICS].map(
+            {[...TOPICS, ...TOPICS, ...TOPICS, ...TOPICS, ...TOPICS, ...TOPICS].map(
               (topic, index) => (
                 <div
                   key={index}
@@ -109,19 +120,19 @@ export default function TopicSwiper({ topics, onSelect }) {
 
         {/* Bottom panel */}
         <div className="machine-panel">
-          <div className="panel-display">
+          <div className="panel-display" aria-live="polite">
             {spinning
-              ? "SPINNING..."
+              ? "Spinning…"
               : selectedIndex !== null
-              ? "LOCKED IN!"
-              : "READY"}
+              ? "Locked in"
+              : "Ready"}
           </div>
         </div>
       </div>
 
       <button className="spin-btn" onClick={spin} disabled={spinning}>
         <span className="btn-text">
-          {spinning ? "Spinning..." : "SPIN"}
+          {spinning ? "Spinning…" : "Spin the wheel"}
         </span>
         <span className="btn-glow"></span>
       </button>

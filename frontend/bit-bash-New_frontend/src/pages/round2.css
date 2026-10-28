@@ -4,17 +4,7 @@
    Enhanced with Welcome.css patterns
    ============================================ */
 
-:root {
-  --bg-main: #0b0f1a;
-  --bg-card: #12172a;
-  --primary-purple: #7c5cff;
-  --primary-glow: #a88bff;
-  --success-green: #2ecc71;
-  --success-dark: #1e7f4f;
-  --accent-pink: #ff4ecd;
-  --accent-blue: #4dd0ff;
-  --warning-orange: #f39c12;
-}
+/* Colors come from styles/theme.css */
 
 /* ============================================
    ANIMATED BACKGROUND WITH GRID PATTERN

@@ -2,12 +2,6 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import "./ScoreBoard.css";
 
-/* Space (in px) between the timer and the score card */
-const GAP_UNDER_TIMER = 32;
-
-/* Width (in px) of the score card; it is centered under the timer */
-const CARD_WIDTH = 300;
-
 /* Animates a number from its old value to the new one */
 function useCountUp(target, ms = 700) {
   const [shown, setShown] = useState(target);
@@ -87,47 +81,19 @@ export default function ScoreBoard({
 
   const shownTotal = useCountUp(total);
 
-  /* Keep the card centered right under the timer */
-  const panelRef = useRef(null);
-  useEffect(() => {
-    const place = () => {
-      const panel = panelRef.current;
-      const timer = document.querySelector(".flip-timer");
-      if (!panel || !timer) return;
-      const r = timer.getBoundingClientRect();
-      const width = Math.max(280, Math.min(CARD_WIDTH, Math.round(r.width)));
-      const centerX = r.left + r.width / 2;
-      panel.style.top = `${Math.round(r.bottom + GAP_UNDER_TIMER)}px`;
-      panel.style.width = `${width}px`;
-      panel.style.right = `${Math.max(8, Math.round(window.innerWidth - (centerX + width / 2)))}px`;
-    };
-
-    place();
-    const timer = document.querySelector(".flip-timer");
-    const observer = typeof ResizeObserver !== "undefined" ? new ResizeObserver(place) : null;
-    if (observer && timer) observer.observe(timer);
-    window.addEventListener("resize", place);
-    const later = setTimeout(place, 300); // the timer can mount a moment later
-
-    return () => {
-      observer?.disconnect();
-      window.removeEventListener("resize", place);
-      clearTimeout(later);
-    };
-  }, []);
-
-  let hint = "Question complete! 🎉";
-  if (!assemblyDone) hint = `Finish assembling the code: +${assemblyPoints}`;
-  else if (!debugDone) hint = `Fix every bug: +${debugPoints}`;
+  let hint = "Question complete";
+  if (!assemblyDone) hint = `Put the lines in order to earn ${assemblyPoints}`;
+  else if (!debugDone) hint = `Fix every bug to earn ${debugPoints} more`;
 
   const percent = Math.min(100, Math.round((total / maxTotal) * 100));
 
   const panel = (
-    <div className="sb-panel" ref={panelRef} aria-live="polite">
+    <div className="sb-panel" aria-live="polite">
       <div className="sb-total-row">
-        <span className="sb-total-label">Total marks</span>
+        <span className="sb-total-label">Round 1 marks</span>
         <span className="sb-total">
-          ⭐ {shownTotal} <small>/ {maxTotal}</small>
+          <span key={popKey} className="sb-total-num">{shownTotal}</span>
+          <small>/ {maxTotal}</small>
         </span>
       </div>
 
@@ -149,23 +115,26 @@ export default function ScoreBoard({
 
       <div className="sb-qline">
         <span className="sb-qname">
-          Q{questionNo} of 3
-          {topicName ? <em className="sb-topic"> · {topicName}</em> : null}
+          Question {questionNo}
+          {topicName ? <em className="sb-topic">{topicName}</em> : null}
         </span>
-        <span>
+        <span className="sb-qscore">
           {questionScore} / {perQuestion}
         </span>
       </div>
 
       <div className="sb-steps">
-        <div className={`sb-step ${assemblyDone ? "done" : ""}`}>
-          <span>🧩 Assemble</span>
+        <div className={`sb-step ${assemblyDone ? "done" : "active"}`}>
+          <span className="sb-step-name">Assemble</span>
           <b>
             {assemblyEarned}/{assemblyPoints}
           </b>
         </div>
-        <div className={`sb-step ${debugDone ? "done" : ""}`}>
-          <span>🐞 Debug{!debugDone && assemblyDone ? ` ${debugProgress}%` : ""}</span>
+        <div className={`sb-step ${debugDone ? "done" : assemblyDone ? "active" : ""}`}>
+          <span className="sb-step-name">
+            Debug
+            {!debugDone && assemblyDone ? <i className="sb-step-pct">{debugProgress}%</i> : null}
+          </span>
           <b>
             {debugEarned}/{debugPoints}
           </b>

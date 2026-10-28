@@ -1,127 +1,152 @@
+/* ============================================================
+   Round 1 scoreboard: fixed rail on the right while solving.
+   Rendered on <body> through a portal, so it is scoped by .sb-panel.
+   Width matches --rail in pages/question.css (300px).
+   ============================================================ */
+
 .sb-panel {
   position: fixed;
-  /* fallback position (under the timer); ScoreBoard.jsx fine-tunes it */
-  top: 212px;
-  right: 50px;
+  top: calc(64px + 28px);
+  right: 24px;
   width: 300px;
-  box-sizing: border-box;
-  z-index: 90;
-  padding: 14px 16px;
-  border-radius: 16px;
-  background: linear-gradient(145deg, #12172a, #0b0f1a);
-  border: 1px solid rgba(124, 92, 255, 0.45);
-  box-shadow: 0 0 30px rgba(124, 92, 255, 0.3), 0 10px 40px rgba(0, 0, 0, 0.5);
-  color: #e8ecff;
-  font-family: inherit;
+  z-index: 40;
+  padding: 20px;
+  font-family: var(--font-ui);
+  color: var(--text-primary);
+  background: var(--hud-corners), var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.4);
+  animation: railIn 0.55s var(--ease-out) 0.1s both;
 }
 
-/* TOTAL */
+@keyframes railIn {
+  from { opacity: 0; transform: translateX(24px); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* ---------- Total ---------- */
 .sb-total-row {
   display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  margin-bottom: 8px;
+  flex-direction: column;
+  gap: 2px;
 }
 
 .sb-total-label {
-  font-size: 0.8rem;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: #a88bff;
+  font-size: 14px;
+  color: var(--text-secondary);
 }
 
 .sb-total {
-  font-size: 1.8rem;
-  font-weight: 900;
-  color: #ffd84d;
-  text-shadow: 0 0 12px rgba(255, 216, 77, 0.45);
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  font-size: 44px;
+  font-weight: 700;
+  line-height: 1.05;
+  font-variant-numeric: tabular-nums;
+}
+
+.sb-total-num {
+  display: inline-block;
+  animation: totalBump 0.5s var(--ease-spring);
+}
+
+@keyframes totalBump {
+  0%   { transform: scale(1); color: var(--text-primary); }
+  35%  { transform: scale(1.12); color: var(--success-green); }
+  100% { transform: scale(1); color: var(--text-primary); }
 }
 
 .sb-total small {
-  font-size: 0.9rem;
-  font-weight: 700;
-  color: #8f9bc4;
-  text-shadow: none;
+  font-size: 18px;
+  font-weight: 500;
+  color: var(--text-faint);
 }
 
 .sb-bar {
-  height: 7px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.1);
+  height: 6px;
+  margin: 14px 0 16px;
+  background: var(--panel-raised);
+  border-radius: 6px;
   overflow: hidden;
-  margin-bottom: 12px;
 }
 
 .sb-bar-fill {
   height: 100%;
-  border-radius: 999px;
   background: var(--grad-neon);
-  transition: width 0.7s ease;
+  border-radius: 6px;
+  transition: width 0.9s var(--ease-out);
 }
 
-/* per-question marks */
+/* ---------- Q1 / Q2 / Q3 ---------- */
 .sb-chips {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 12px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  margin-bottom: 18px;
 }
 
 .sb-chip {
-  flex: 1;
   display: flex;
-  justify-content: space-between;
-  padding: 6px 10px;
-  border-radius: 8px;
-  font-size: 0.85rem;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid transparent;
-}
-
-.sb-chip span {
-  color: #8f9bc4;
-  font-weight: 700;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  padding: 8px 0;
+  font-size: 13px;
+  color: var(--text-faint);
+  background: var(--panel-sunken);
+  border: 1px solid var(--line);
+  border-radius: 3px;
 }
 
 .sb-chip b {
-  color: #e8ecff;
+  font-size: 17px;
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
 }
 
 .sb-chip.current {
-  border-color: rgba(124, 92, 255, 0.8);
-  background: rgba(124, 92, 255, 0.18);
+  color: var(--accent-pink);
+  border-color: rgba(255, 79, 176, 0.55);
+  background: rgba(255, 79, 176, 0.08);
 }
+.sb-chip.current b { color: var(--text-primary); }
 
-/* this question */
+/* ---------- This question ---------- */
 .sb-qline {
   display: flex;
+  align-items: flex-start;
   justify-content: space-between;
-  font-size: 0.78rem;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: #8f9bc4;
-  margin-bottom: 6px;
+  gap: 12px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+  margin-bottom: 12px;
 }
 
-.sb-qline span:last-child {
-  color: #e8ecff;
-  font-weight: 700;
-  white-space: nowrap;
-  margin-left: 10px;
-}
-
-/* "Q2 of 3 · Palindrome" - long topic names get cut with ... */
 .sb-qname {
+  display: flex;
+  flex-direction: column;
   min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  font-size: 13px;
+  color: var(--text-secondary);
 }
 
 .sb-topic {
   font-style: normal;
-  font-weight: 800;
-  color: #c9b8ff;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sb-qscore {
+  flex-shrink: 0;
+  font-size: 15px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
 }
 
 .sb-steps {
@@ -132,56 +157,80 @@
 
 .sb-step {
   display: flex;
+  align-items: center;
   justify-content: space-between;
-  padding: 7px 10px;
-  border-radius: 8px;
-  font-size: 0.9rem;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid transparent;
-  transition: all 0.3s ease;
+  padding: 10px 12px;
+  font-size: 15px;
+  color: var(--text-faint);
+  background: var(--panel-sunken);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--line-strong);
+  border-radius: 3px;
+  transition: all 0.3s;
 }
 
 .sb-step b {
-  color: #8f9bc4;
+  font-variant-numeric: tabular-nums;
+}
+
+.sb-step-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sb-step-pct {
+  font-style: normal;
+  font-size: 12px;
+  padding: 1px 6px;
+  color: var(--primary-glow);
+  background: rgba(139, 92, 255, 0.16);
+  border-radius: 3px;
+}
+
+/* the step you're on now */
+.sb-step.active {
+  color: var(--text-primary);
+  border-left-color: var(--accent-pink);
 }
 
 .sb-step.done {
-  background: rgba(46, 204, 113, 0.12);
-  border-color: rgba(46, 204, 113, 0.5);
+  color: var(--success-green);
+  border-color: rgba(62, 240, 176, 0.3);
+  border-left-color: var(--success-green);
+  background: rgba(62, 240, 176, 0.06);
 }
 
-.sb-step.done b {
-  color: #2ecc71;
+.sb-step.done .sb-step-name::before {
+  content: "✓";
+  font-weight: 700;
 }
 
 .sb-hint {
-  margin-top: 10px;
-  font-size: 0.8rem;
-  color: #9fd8ff;
-  text-align: center;
+  margin-top: 14px;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--text-secondary);
 }
 
-/* floating "+50" popup */
+/* ---------- "+50" float ---------- */
 .sb-pop {
   position: absolute;
-  left: 50%;
-  top: 0;
-  transform: translateX(-50%);
-  font-size: 2.2rem;
-  font-weight: 900;
-  color: #2ecc71;
-  text-shadow: 0 0 14px rgba(46, 204, 113, 0.9);
+  top: 20px;
+  right: 20px;
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--success-green);
   pointer-events: none;
-  animation: sb-float 1.6s ease-out forwards;
+  animation: popFloat 1.3s var(--ease-out) forwards;
 }
 
-@keyframes sb-float {
-  0%   { opacity: 0; transform: translate(-50%, 10px) scale(0.6); }
-  20%  { opacity: 1; transform: translate(-50%, 24px) scale(1.25); }
-  100% { opacity: 0; transform: translate(-50%, 90px) scale(1); }
+@keyframes popFloat {
+  0%   { opacity: 0; transform: translateY(10px) scale(0.8); }
+  20%  { opacity: 1; transform: translateY(0) scale(1.1); }
+  100% { opacity: 0; transform: translateY(-34px) scale(1); }
 }
 
-@media (max-width: 700px) {
-  .sb-panel { padding: 10px 12px; }
-  .sb-total { font-size: 1.4rem; }
+@media (max-width: 1100px) {
+  .sb-panel { display: none; }
 }

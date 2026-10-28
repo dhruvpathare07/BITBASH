@@ -170,3 +170,33 @@
 .admin-table th.sortable:hover {
   color: var(--accent-pink, #ff4ecd);
 }
+
+/* One table per language */
+.admin-group {
+  margin-top: 28px;
+  animation: bb-rise 0.5s var(--ease-out) both;
+}
+.admin-group + .admin-group { animation-delay: 0.08s; }
+
+.admin-group-head {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.admin-group-title {
+  margin: 0;
+  padding-left: 12px;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text-primary);
+  border-left: 3px solid var(--line-strong);
+}
+.admin-group-title.lang-python { border-left-color: var(--accent-pink); }
+.admin-group-title.lang-c { border-left-color: var(--primary-purple); }
+
+.admin-group-count {
+  font-size: 14px;
+  color: var(--text-secondary);
+}

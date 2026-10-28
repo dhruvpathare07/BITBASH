@@ -20,20 +20,7 @@
   src: url('../assets/fonts/eb-garamond-latin-italic.woff2') format('woff2');
 }
 
-:root {
-  --bg-main: #0b0f1a;
-  --bg-card: #12172a;
-  --primary-purple: #7c5cff;
-  --primary-glow: #a88bff;
-  --success-green: #2ecc71;
-  --success-dark: #1e7f4f;
-  --accent-pink: #ff4ecd;
-  --accent-blue: #4dd0ff;
-  --warning-orange: #f39c12;
-  --border-color: rgba(124, 92, 255, 0.3);
-  --text-light: rgba(255, 255, 255, 0.8);
-  --text-lighter: rgba(255, 255, 255, 0.5);
-}
+/* Colors come from styles/theme.css */
 
 /* Base Container */
 .results-container {
