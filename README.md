@@ -90,6 +90,39 @@ python app.py
 
 ---
 
+## 🔌 Running Offline (event PC, no internet)
+
+The app runs fully offline — frontend and backend both run locally, and all
+assets (including fonts) are bundled. Two helper scripts are provided at the
+project root:
+
+**One-time setup (with internet), on the event PC:**
+
+```bash
+setup.bat
+```
+
+This installs the Python and npm dependencies, builds the frontend, and creates
+`backend\.env` from the example (open it and set your `ADMIN_PASSKEY`).
+
+**On the day of the event (no internet needed) — just double-click:**
+
+```bash
+start-event.bat
+```
+
+This starts the backend (`http://localhost:5000`) and the built frontend
+(`http://localhost:5173`) in two windows and opens the browser.
+
+* Game:  `http://localhost:5173`
+* Admin: `http://localhost:5173/admin`
+
+> Requires Python and Node.js installed on the machine. The `C` challenges also
+> need `gcc` on the PATH. A Vercel deployment is served over the internet, so
+> it is **not** an offline option — use `start-event.bat` for a no-net event.
+
+---
+
 ## ⚙️ How It Works
 
 1. Player enters name and selects avatar
