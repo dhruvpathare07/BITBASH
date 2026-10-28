@@ -153,3 +153,20 @@
   color: var(--text-secondary);
   padding: 28px;
 }
+
+/* Actions bar (Export + Refresh) */
+.admin-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* Sortable column headers */
+.admin-table th.sortable {
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+}
+.admin-table th.sortable:hover {
+  color: var(--accent-pink, #ff4ecd);
+}

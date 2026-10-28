@@ -5,7 +5,7 @@ import logo from "../assets/bnb_logo.png";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import { useNavigate } from "react-router-dom";
-import { API_BASE } from "../config";
+import { postResult } from "../config";
 
 
 
@@ -154,22 +154,19 @@ const playerTitle = getTitle();
     sessionStorage.setItem("round1ResultsSeen", "true");
   }, []);
 
-  // Save this player's Round 1 score for the admin panel.
+  // Save this player's Round 1 score for the admin panel (retries on failure).
   useEffect(() => {
     if (totalScore <= 0) return;
     const p = JSON.parse(sessionStorage.getItem("playerProfile") || "{}");
     if (!p.username) return;
-    fetch(`${API_BASE}/results`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        username: p.username,
-        name: p.fullName,
-        className: p.className,
-        round: 1,
-        score: Math.round(totalScore),
-      }),
-    }).catch(() => {});
+    postResult({
+      username: p.username,
+      name: p.fullName,
+      className: p.className,
+      language: (p.language || "").toLowerCase(),
+      round: 1,
+      score: Math.round(totalScore),
+    });
   }, [totalScore]);
 
   // Confetti animation on mount
@@ -192,8 +189,6 @@ const playerTitle = getTitle();
   }, []);
 
   const handleNextRound = () => {
-    alert('Moving to Next Round! 🚀');
-    // Add your navigation logic here
     navigate("/round-2");
   };
   const pdfRef = useRef(null);

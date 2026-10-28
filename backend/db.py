@@ -18,6 +18,7 @@ CREATE TABLE IF NOT EXISTS results (
     username   TEXT    NOT NULL,
     name       TEXT,
     class_name TEXT,
+    language   TEXT,
     round      INTEGER NOT NULL,
     score      INTEGER NOT NULL,
     updated_at TEXT,
@@ -34,17 +35,32 @@ def _connect():
     return sqlite3.connect(SQLITE_PATH)
 
 
+def _ensure_language_column(cur):
+    """Add the `language` column to pre-existing tables that lack it."""
+    try:
+        if _IS_PG:
+            cur.execute("ALTER TABLE results ADD COLUMN IF NOT EXISTS language TEXT")
+        else:
+            cols = [r[1] for r in cur.execute("PRAGMA table_info(results)").fetchall()]
+            if "language" not in cols:
+                cur.execute("ALTER TABLE results ADD COLUMN language TEXT")
+    except Exception:
+        # Column already exists / race with another worker — safe to ignore.
+        pass
+
+
 def init_db():
     conn = _connect()
     try:
         cur = conn.cursor()
         cur.execute(_SCHEMA)
+        _ensure_language_column(cur)
         conn.commit()
     finally:
         conn.close()
 
 
-def save_result(username, name, class_name, rnd, score):
+def save_result(username, name, class_name, rnd, score, language=""):
     now = datetime.datetime.utcnow().isoformat()
     conn = _connect()
     try:
@@ -52,28 +68,30 @@ def save_result(username, name, class_name, rnd, score):
         if _IS_PG:
             cur.execute(
                 """
-                INSERT INTO results (username, name, class_name, round, score, updated_at)
-                VALUES (%s, %s, %s, %s, %s, %s)
+                INSERT INTO results (username, name, class_name, language, round, score, updated_at)
+                VALUES (%s, %s, %s, %s, %s, %s, %s)
                 ON CONFLICT (username, round)
                 DO UPDATE SET name = EXCLUDED.name,
                               class_name = EXCLUDED.class_name,
+                              language = EXCLUDED.language,
                               score = EXCLUDED.score,
                               updated_at = EXCLUDED.updated_at
                 """,
-                (username, name, class_name, rnd, score, now),
+                (username, name, class_name, language, rnd, score, now),
             )
         else:
             cur.execute(
                 """
-                INSERT INTO results (username, name, class_name, round, score, updated_at)
-                VALUES (?, ?, ?, ?, ?, ?)
+                INSERT INTO results (username, name, class_name, language, round, score, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
                 ON CONFLICT(username, round)
                 DO UPDATE SET name = excluded.name,
                               class_name = excluded.class_name,
+                              language = excluded.language,
                               score = excluded.score,
                               updated_at = excluded.updated_at
                 """,
-                (username, name, class_name, rnd, score, now),
+                (username, name, class_name, language, rnd, score, now),
             )
         conn.commit()
     finally:
@@ -86,20 +104,21 @@ def get_all_results():
     try:
         cur = conn.cursor()
         cur.execute(
-            "SELECT username, name, class_name, round, score, updated_at FROM results"
+            "SELECT username, name, class_name, language, round, score, updated_at FROM results"
         )
         rows = cur.fetchall()
     finally:
         conn.close()
 
     players = {}
-    for username, name, class_name, rnd, score, updated_at in rows:
+    for username, name, class_name, language, rnd, score, updated_at in rows:
         p = players.setdefault(
             username,
             {
                 "username": username,
                 "name": name,
                 "className": class_name,
+                "language": language or "",
                 "round1": None,
                 "round2": None,
                 "updatedAt": updated_at,
@@ -109,6 +128,8 @@ def get_all_results():
             p["name"] = name
         if class_name:
             p["className"] = class_name
+        if language:
+            p["language"] = language
         if rnd == 1:
             p["round1"] = score
         elif rnd == 2:

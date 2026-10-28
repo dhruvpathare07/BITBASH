@@ -1,5 +1,9 @@
 import logging
 import os
+import time
+import threading
+from collections import defaultdict, deque
+from functools import wraps
 
 from flask import Flask, request, jsonify
 from flask_cors import CORS
@@ -74,46 +78,42 @@ def read_json_object():
     return data if isinstance(data, dict) else None
 
 
+# ---- Simple in-memory rate limiter (per process) ----
+# Enough to blunt floods on the dev/single-worker server. For multi-worker or
+# serverless production, use a shared store (e.g. Flask-Limiter + Redis).
+_rl_lock = threading.Lock()
+_rl_hits = defaultdict(deque)
+
+
+def rate_limit(max_requests, per_seconds):
+    def decorator(fn):
+        @wraps(fn)
+        def wrapper(*args, **kwargs):
+            if request.method == "OPTIONS":
+                return fn(*args, **kwargs)
+            ip = (request.headers.get("X-Forwarded-For", request.remote_addr or "?")
+                  .split(",")[0].strip())
+            key = (fn.__name__, ip)
+            now = time.time()
+            with _rl_lock:
+                hits = _rl_hits[key]
+                while hits and hits[0] <= now - per_seconds:
+                    hits.popleft()
+                if len(hits) >= max_requests:
+                    return jsonify(success=False, error="Too many requests. Slow down."), 429
+                hits.append(now)
+            return fn(*args, **kwargs)
+        return wrapper
+    return decorator
+
+
 MAX_SCORE = 100
 START_SCORE = 50
 PENALTY_PER_FAIL = 2
 
 
-# ✅ NEW RUN ENDPOINT
-@app.route("/run", methods=["POST"])
-def run():
-    try:
-        data = read_json_object()
-        if data is None:
-            return jsonify(success=False, error="Invalid request"), 400
-
-        code = data.get("code")
-        language = str(data.get("language", "python")).lower()
-        input_data = data.get("input", "")
-
-        if not isinstance(code, str) or not code.strip():
-            return jsonify(success=False, error="No code provided"), 400
-        if len(code) > MAX_CODE_LENGTH:
-            return jsonify(success=False, error="Code is too long"), 400
-        if not isinstance(input_data, str) or len(input_data) > MAX_INPUT_LENGTH:
-            return jsonify(success=False, error="Invalid input"), 400
-        if language not in ("python", "c"):
-            return jsonify(success=False, error="Unsupported language"), 400
-
-        output, error = run_code(code, input_data, language)
-
-        return jsonify(
-            success=error == "",
-            output=output,
-            error=error
-        )
-
-    except Exception:
-        logger.exception("/run failed")
-        return jsonify(success=False, error="Server error"), 500
-
-
 @app.route("/evaluate", methods=["POST", "OPTIONS"])
+@rate_limit(60, 60)
 def evaluate():
     if request.method == "OPTIONS":
         return "", 200
@@ -217,7 +217,12 @@ def evaluate_c_code(topic, code, attempts):
     )
 
 
+# Highest score each round can legitimately reach.
+MAX_ROUND_SCORE = {1: 300, 2: 100}
+
+
 @app.route("/results", methods=["POST", "OPTIONS"])
+@rate_limit(30, 60)
 def submit_result():
     if request.method == "OPTIONS":
         return "", 200
@@ -229,6 +234,9 @@ def submit_result():
         username = str(data.get("username") or "").strip()
         name = str(data.get("name") or "").strip()
         class_name = str(data.get("className") or "").strip()
+        language = str(data.get("language") or "").strip().lower()
+        if language not in ("python", "c"):
+            language = ""
         rnd = data.get("round")
 
         try:
@@ -236,10 +244,13 @@ def submit_result():
         except (TypeError, ValueError):
             return jsonify(success=False, error="Invalid score"), 400
 
-        if not username or rnd not in (1, 2) or not (0 <= score <= 1000):
+        if not username or rnd not in (1, 2):
             return jsonify(success=False, error="Missing or invalid fields"), 400
+        # Clamp to the round's real maximum so a tampered client can't inflate.
+        if not (0 <= score <= MAX_ROUND_SCORE[rnd]):
+            return jsonify(success=False, error="Score out of range"), 400
 
-        save_result(username[:60], name[:80], class_name[:40], rnd, score)
+        save_result(username[:60], name[:80], class_name[:40], rnd, score, language)
         return jsonify(success=True)
     except Exception:
         logger.exception("Error in /results")
@@ -247,6 +258,7 @@ def submit_result():
 
 
 @app.route("/admin/results", methods=["POST", "OPTIONS"])
+@rate_limit(20, 60)
 def admin_results():
     if request.method == "OPTIONS":
         return "", 200

@@ -5,7 +5,7 @@ import jsPDF from "jspdf";
 import { useNavigate } from "react-router-dom";
 import "./Round2Results.css";
 import logo from "../assets/bnb_logo.png";
-import { API_BASE } from "../config";
+import { postResult } from "../config";
 
 export default function Round2Results() {
   const navigate = useNavigate();
@@ -51,20 +51,17 @@ export default function Round2Results() {
 
   const totalScore = results?.score ?? 0;
 
-  // Save this player's Round 2 score for the admin panel.
+  // Save this player's Round 2 score for the admin panel (retries on failure).
   useEffect(() => {
     if (!results || !profile?.username) return;
-    fetch(`${API_BASE}/results`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        username: profile.username,
-        name: profile.fullName,
-        className: profile.className,
-        round: 2,
-        score: Math.round(results.score ?? 0),
-      }),
-    }).catch(() => {});
+    postResult({
+      username: profile.username,
+      name: profile.fullName,
+      className: profile.className,
+      language: (results.language || profile.language || "").toLowerCase(),
+      round: 2,
+      score: Math.round(results.score ?? 0),
+    });
   }, [results, profile]);
 
   const totalTime = scoreData.reduce(

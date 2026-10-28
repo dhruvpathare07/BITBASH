@@ -1,6 +1,29 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { API_BASE } from "../config";
 import "./Admin.css";
+
+const COLUMNS = [
+  { key: "rank", label: "#", sortable: false },
+  { key: "name", label: "Name", sortable: true },
+  { key: "className", label: "Class", sortable: true },
+  { key: "language", label: "Language", sortable: true },
+  { key: "round1", label: "Round 1", sortable: true, num: true },
+  { key: "round2", label: "Round 2", sortable: true, num: true },
+  { key: "total", label: "Total", sortable: true, num: true },
+  { key: "updatedAt", label: "Last Played", sortable: true },
+];
+
+const withTotal = (r) => (r.round1 || 0) + (r.round2 || 0);
+
+const fmtDate = (iso) => {
+  if (!iso) return "—";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "—";
+  return d.toLocaleString(undefined, {
+    dateStyle: "medium",
+    timeStyle: "short",
+  });
+};
 
 export default function Admin() {
   const [passkey, setPasskey] = useState("");
@@ -8,6 +31,7 @@ export default function Admin() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [authed, setAuthed] = useState(false);
+  const [sort, setSort] = useState({ key: "total", dir: "desc" });
 
   const load = async (key) => {
     setLoading(true);
@@ -38,6 +62,77 @@ export default function Admin() {
     if (passkey.trim()) load(passkey.trim());
   };
 
+  const toggleSort = (key) => {
+    setSort((s) =>
+      s.key === key
+        ? { key, dir: s.dir === "asc" ? "desc" : "asc" }
+        : { key, dir: key === "name" || key === "className" ? "asc" : "desc" }
+    );
+  };
+
+  const sortedRows = useMemo(() => {
+    if (!rows) return [];
+    const arr = [...rows];
+    const { key, dir } = sort;
+    const factor = dir === "asc" ? 1 : -1;
+    arr.sort((a, b) => {
+      let av;
+      let bv;
+      if (key === "total") {
+        av = withTotal(a);
+        bv = withTotal(b);
+      } else if (key === "round1" || key === "round2") {
+        av = a[key] ?? -1;
+        bv = b[key] ?? -1;
+      } else {
+        av = (a[key] || "").toString().toLowerCase();
+        bv = (b[key] || "").toString().toLowerCase();
+      }
+      if (av < bv) return -1 * factor;
+      if (av > bv) return 1 * factor;
+      return 0;
+    });
+    return arr;
+  }, [rows, sort]);
+
+  const exportCSV = () => {
+    const header = [
+      "Rank",
+      "Name",
+      "Username",
+      "Class",
+      "Language",
+      "Round 1",
+      "Round 2",
+      "Total",
+      "Last Played",
+    ];
+    const esc = (v) => `"${String(v ?? "").replace(/"/g, '""')}"`;
+    const lines = sortedRows.map((r, i) =>
+      [
+        i + 1,
+        r.name || "",
+        r.username || "",
+        r.className || "",
+        r.language || "",
+        r.round1 ?? "",
+        r.round2 ?? "",
+        withTotal(r),
+        r.updatedAt || "",
+      ]
+        .map(esc)
+        .join(",")
+    );
+    const csv = [header.map(esc).join(","), ...lines].join("\r\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `bitbash_results_${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   if (!authed) {
     return (
       <div className="admin-page">
@@ -61,14 +156,26 @@ export default function Admin() {
     );
   }
 
+  const arrow = (key) =>
+    sort.key === key ? (sort.dir === "asc" ? " ▲" : " ▼") : "";
+
   return (
     <div className="admin-page">
       <div className="admin-content">
         <div className="admin-head">
           <h1 className="admin-title">Admin Panel</h1>
-          <button className="admin-refresh" onClick={() => load(passkey)}>
-            ↻ Refresh
-          </button>
+          <div className="admin-actions">
+            <button
+              className="admin-refresh"
+              onClick={exportCSV}
+              disabled={sortedRows.length === 0}
+            >
+              ⬇ Export CSV
+            </button>
+            <button className="admin-refresh" onClick={() => load(passkey)}>
+              ↻ Refresh
+            </button>
+          </div>
         </div>
         <p className="admin-sub">
           {rows.length} player{rows.length === 1 ? "" : "s"} · Round 1 /300 ·
@@ -79,32 +186,38 @@ export default function Admin() {
           <table className="admin-table">
             <thead>
               <tr>
-                <th>#</th>
-                <th>Name</th>
-                <th>Class</th>
-                <th className="num">Round 1</th>
-                <th className="num">Round 2</th>
-                <th className="num">Total</th>
+                {COLUMNS.map((c) => (
+                  <th
+                    key={c.key}
+                    className={`${c.num ? "num" : ""} ${
+                      c.sortable ? "sortable" : ""
+                    }`}
+                    onClick={c.sortable ? () => toggleSort(c.key) : undefined}
+                  >
+                    {c.label}
+                    {c.sortable ? arrow(c.key) : ""}
+                  </th>
+                ))}
               </tr>
             </thead>
             <tbody>
-              {rows.length === 0 && (
+              {sortedRows.length === 0 && (
                 <tr>
-                  <td colSpan="6" className="admin-empty">
+                  <td colSpan={COLUMNS.length} className="admin-empty">
                     No results yet.
                   </td>
                 </tr>
               )}
-              {rows.map((r, i) => (
+              {sortedRows.map((r, i) => (
                 <tr key={r.username}>
                   <td className="rank">{i + 1}</td>
                   <td>{r.name || r.username}</td>
                   <td>{r.className || "—"}</td>
+                  <td>{r.language ? r.language.toUpperCase() : "—"}</td>
                   <td className="num">{r.round1 ?? "—"}</td>
                   <td className="num">{r.round2 ?? "—"}</td>
-                  <td className="num total">
-                    {(r.round1 || 0) + (r.round2 || 0)}
-                  </td>
+                  <td className="num total">{withTotal(r)}</td>
+                  <td>{fmtDate(r.updatedAt)}</td>
                 </tr>
               ))}
             </tbody>
