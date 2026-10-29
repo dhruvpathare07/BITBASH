@@ -1,7 +1,6 @@
 'use client';
 
 import { useNavigate } from "react-router-dom";
-import logo from "../assets/bnb_logo.png";
 import './Welcome.css'
 
 const LANGUAGES = [
@@ -30,8 +29,6 @@ function Welcome() {
       </div>
 
       <main className="home-content">
-        <p className="home-presents">Bits 'N' Bytes presents</p>
-
         <h1 className="home-title" aria-label="Bit Bash Bonanza">
           <span className="home-title-line" data-text="BIT BASH">BIT BASH</span>
           <span className="home-title-line" data-text="BONANZA">BONANZA</span>
@@ -65,11 +62,6 @@ function Welcome() {
           </div>
         </section>
       </main>
-
-      <footer className="home-footer">
-        <img src={logo} alt="" className="home-footer-logo" />
-        <span>Hosted by the Bits 'N' Bytes Committee</span>
-      </footer>
     </div>
   );
 }

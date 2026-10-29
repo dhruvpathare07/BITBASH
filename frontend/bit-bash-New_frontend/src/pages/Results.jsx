@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './Results.css';
 import html2pdf from 'html2pdf.js';
-import logo from "../assets/bnb_logo.png";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import { useNavigate } from "react-router-dom";
@@ -365,19 +364,6 @@ const handleDownloadPDF = async () => {
           </button>
         </div>
 
-        {/* Footer */}
-        <div className="results-footer">
-  <div className="footer-box footer-powered">
-    <img src={logo} alt="Bits N Bytes Logo" className="footer-logo" />
-
-
-    <div className="footer-text">
-      <div className="powered-by">POWERED BY</div>
-      <div className="committee-name">Bits 'N' Bytes Committee</div>
-    </div>
-  </div>
-</div>
-
       </div>
 
       {/* Next Round Alert Modal */}
@@ -506,15 +492,6 @@ const handleDownloadPDF = async () => {
         {playerTitle}
       </div>
     </div>
-
-    <div className="results-footer">
-      <div className="footer-box footer-powered">
-        <img src={logo} alt="Bits N Bytes Logo" className="footer-logo" />
-        <div className="footer-text">
-          <div className="powered-by">POWERED BY</div>
-          <div className="committee-name">Bits 'N' Bytes Committee</div>
-        </div>
-      </div>
     </div>
 
   </div>

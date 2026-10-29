@@ -4,7 +4,6 @@ import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import { useNavigate } from "react-router-dom";
 import "./Round2Results.css";
-import logo from "../assets/bnb_logo.png";
 import { postResult } from "../config";
 
 export default function Round2Results() {
@@ -392,23 +391,6 @@ export default function Round2Results() {
           >
             Back to Home
           </button>
-        </div>
-
-        <div className="results-footer">
-          <div className="footer-box footer-powered">
-            <img
-              src={logo}
-              alt="Bits N Bytes Logo"
-              className="footer-logo"
-            />
-
-            <div className="footer-text">
-              <div className="powered-by">POWERED BY</div>
-              <div className="committee-name">
-                Bits 'N' Bytes Committee
-              </div>
-            </div>
-          </div>
         </div>
       </div>
     </div>

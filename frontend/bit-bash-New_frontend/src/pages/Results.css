@@ -3,7 +3,6 @@
    Cyber Purple + Neon Green Theme
    ============================================ */
 
-
 /* EB Garamond self-hosted (latin) so the app works fully offline — no CDN. */
 @font-face {
   font-family: 'EB Garamond';
@@ -265,7 +264,6 @@
   transform: translateX(-50%);
   text-align: center;
 }
-
 
 /* @keyframes avatarPulse {
   0%, 100% {
@@ -639,80 +637,6 @@
 }
 
 /* ============================================
-   FOOTER SECTION
-   ============================================ */
-
-.results-footer {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  text-align: center;
-  padding-top: 1rem;
-  border-top: 2px solid var(--border-color);
-  animation: fadeInUp 0.8s ease forwards;
-  opacity: 0;
-  animation-delay: 1s;
-  margin-top: 1.5rem;
-}
-
-.footer-box {
-  padding: 1.25rem 1.5rem;
-  background: rgba(77, 208, 255, 0.12);
-  border: 2px solid var(--border-color);
-  border-radius: 12px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 1.5px;
-  color: var(--accent-blue);
-  font-size: 1.1rem;
-  transition: all 0.3s ease;
-  font-family: 'EB Garamond', serif;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 1.25rem;
-  box-shadow: 0 8px 24px rgba(77, 208, 255, 0.1);
-}
-
-.footer-box:hover {
-  background: rgba(77, 208, 255, 0.18);
-  box-shadow: 0 0 30px rgba(77, 208, 255, 0.3);
-  border-color: var(--accent-blue);
-  transform: translateY(-2px);
-}
-
-.footer-logo {
-  width: 50px;
-  height: 50px;
-  flex-shrink: 0;
-  object-fit: contain;
-}
-
-.footer-text {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-  align-items: center;
-}
-
-.powered-by {
-  font-size: 0.9rem;
-  color: var(--text-lighter);
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  font-weight: 600;
-}
-
-.committee-name {
-  font-size: 1.1rem;
-  color: var(--accent-blue);
-  font-weight: 800;
-  letter-spacing: 1.5px;
-  text-transform: uppercase;
-  margin-right: -55%;
-}
-
-/* ============================================
    MODAL - NEXT ROUND ALERT
    ============================================ */
 
@@ -983,26 +907,6 @@
   .summary-boxes {
     gap: 1rem;
   }
-
-  .footer-box {
-    padding: 1rem 1.25rem;
-    flex-direction: column;
-    gap: 0.75rem;
-    font-size: 0.95rem;
-  }
-
-  .footer-logo {
-    width: 45px;
-    height: 45px;
-  }
-
-  .powered-by {
-    font-size: 0.85rem;
-  }
-
-  .committee-name {
-    font-size: 1rem;
-  }
 }
 
 @media (max-width: 480px) {
@@ -1194,48 +1098,13 @@
   }
 }
 
-
-.footer-logo{
-  margin: 0;
-  z-index: 4;
-  height: 64px;
-  width: auto;
-}
-
-.footer-powered {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: center;
-  gap: 18px;
-}
-
-/* logo and text sit side by side, text left-aligned next to the logo */
-.footer-text {
+/* logo and text sit side by side {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   gap: 2px;
   text-align: left;
 }
-
-.powered-by {
-  font-size: 1.2rem;
-  letter-spacing: 2px;
-  font-weight: 700;
-  font-family: 'EB Garamond', serif;
-  color: var(--accent-blue);
-}
-
-.committee-name {
-  font-size: 1.2rem;
-  font-weight: 700;
-  font-family: 'EB Garamond', serif;
-  color: var(--accent-blue);
-  text-align: left;
-  margin: 0;
-}
-
 
 .pdf-wrapper {
   position: fixed;
@@ -1246,8 +1115,6 @@
   opacity: 0;
   pointer-events: none;
 }
-
-
 
 .pdf-mode * {
   animation: none !important;
@@ -1371,34 +1238,16 @@
   margin-right: 40px !important;
 }
 
-
 /* Force language badge to right */
 .pdf-mode .language-badge {
   position: relative !important;
   right: 0 !important;
 }
 
-
 /* Remove hover animations in PDF */
 .pdf-mode * {
   animation: none !important;
   transition: none !important;
-}
-
-/* Force footer look same */
-.pdf-mode .results-footer {
-  margin-top: 0px !important;
-  margin-bottom: -20px !important;
-  /* margin-right: -40px !important; */
-  border-top: 2px solid var(--border-color) !important;
-}
-.pdf-mode .powered-by,
-.pdf-mode .committee-name {
-  margin: 0 !important;
-  white-space: nowrap !important;
-}
-.pdf-mode .footer-logo {
-  margin: 0 !important;
 }
 /* Remove backdrop blur for clean print */
 .pdf-mode {
