@@ -234,3 +234,8 @@
 @media (max-width: 1100px) {
   .sb-panel { display: none; }
 }
+
+/* debug step with some grace marks banked */
+.sb-step.partial b {
+  color: var(--success-green);
+}

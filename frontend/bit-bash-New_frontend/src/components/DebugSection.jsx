@@ -1,11 +1,12 @@
 'use client';
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import "./DebugSection.css";
 import { PYTHON_BUGGY_CODE } from "../data/pythonBuggyCode";
 import { C_BUGGY_CODE } from "../data/cBuggyCode"; // added
 import { API_BASE } from "../config";
 import { checkOffline } from "../utils/offlineChecker";
+import { findBugs, countFixedBugs, graceMarks } from "../utils/graceMarks";
 
 const INDENT = "    ";
 const SERVER_TIMEOUT_MS = 6000;
@@ -35,7 +36,15 @@ async function evaluateFix(payload) {
   }
 }
 
-export default function DebugSection({ topic, onScoreChange, onSuccess, onGiveUp, language = "python" }) {
+export default function DebugSection({
+  topic,
+  onScoreChange,
+  onGraceChange,
+  onSuccess,
+  onGiveUp,
+  language = "python",
+  debugPoints = 50,
+}) {
   const [code, setCode] = useState("");
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -45,8 +54,22 @@ export default function DebugSection({ topic, onScoreChange, onSuccess, onGiveUp
   const [showFixedModal, setShowFixedModal] = useState(false);
   const [showGiveUpModal, setShowGiveUpModal] = useState(false);
 
+  // Grace marks: the most bugs fixed at once so far (never goes down)
+  const [bestFixed, setBestFixed] = useState(0);
+  const [fixedNow, setFixedNow] = useState(null);
+  const [gain, setGain] = useState(null); // { marks, key } for the "+25" pop
+
   const gutterRef = useRef(null);
   const escapedRef = useRef(false);
+
+  const buggyCode = (language === "c" ? C_BUGGY_CODE : PYTHON_BUGGY_CODE)[topic] || "";
+  const bugs = useMemo(() => findBugs(topic, buggyCode, language), [topic, buggyCode, language]);
+  const hasGrace = bugs.total > 0;
+  const earned = graceMarks(bestFixed, bugs.total, debugPoints);
+
+  // Latest values for the unmount handler below
+  const latest = useRef({});
+  latest.current = { code, bestFixed, bugs, topic, language, debugPoints, onGraceChange };
 
   useEffect(() => {
     const source = language === "c" ? C_BUGGY_CODE : PYTHON_BUGGY_CODE;
@@ -56,10 +79,43 @@ export default function DebugSection({ topic, onScoreChange, onSuccess, onGiveUp
       setResult(null);
       setAttempts(0);
       setAllFixed(false);
+      setBestFixed(0);
+      setFixedNow(null);
+      setGain(null);
     } else {
       setCode("");
     }
   }, [topic, language]);
+
+  // The best of: most bugs fixed at any check, and what the code fixes right now
+  const settle = (current = latest.current) => {
+    if (!current.bugs.total) return { fixed: 0, marks: 0, total: 0 };
+    const now = countFixedBugs(current.topic, current.code, current.language, current.bugs);
+    const fixed = Math.max(current.bestFixed, now);
+    return { fixed, total: current.bugs.total, marks: graceMarks(fixed, current.bugs.total, current.debugPoints) };
+  };
+
+  // If the editor closes without a check (time ran out), still count the
+  // bugs the current code fixes so that work isn't lost.
+  useEffect(() => {
+    return () => {
+      const current = latest.current;
+      if (current.bugs?.total && current.onGraceChange) current.onGraceChange(settle(current));
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const recordFixed = (fixed) => {
+    setFixedNow(fixed);
+    if (!hasGrace) return;
+    const best = Math.max(bestFixed, fixed);
+    if (best > bestFixed) {
+      const gained = graceMarks(best, bugs.total, debugPoints) - graceMarks(bestFixed, bugs.total, debugPoints);
+      setGain({ marks: gained, key: Date.now() });
+    }
+    setBestFixed(best);
+    onGraceChange?.({ fixed: best, total: bugs.total, marks: graceMarks(best, bugs.total, debugPoints) });
+  };
 
   const handleCheck = async () => {
     const nextAttempts = attempts + 1;
@@ -77,11 +133,13 @@ export default function DebugSection({ topic, onScoreChange, onSuccess, onGiveUp
 
       const newProgress = Number(data.progress) || 0;
       setProgress(newProgress);
-      onScoreChange(newProgress);
+      onScoreChange?.(newProgress);
 
-      if (data.finalStatus === "SUCCESS") {
+      const solved = data.finalStatus === "SUCCESS";
+      if (solved) {
         setAllFixed(true);
       }
+      recordFixed(solved ? bugs.total : countFixedBugs(topic, code, language, bugs));
     } catch {
       setResult({ success: false, message: "Something went wrong while checking. Try again." });
     }
@@ -159,18 +217,47 @@ export default function DebugSection({ topic, onScoreChange, onSuccess, onGiveUp
           {loading ? "Checking…" : "Run check"}
         </button>
 
-        <div className="progress-wrapper">
-          <div className="progress-label">
-            <span>Progress</span>
-            <span className="progress-percentage">{progress}%</span>
+        {hasGrace ? (
+          /* Grace marks: one segment per bug, each worth its share */
+          <div className="bug-meter" aria-live="polite">
+            <div className="bug-meter-head">
+              <span className="bug-meter-label">
+                Bugs fixed <b>{bestFixed}</b> of {bugs.total}
+              </span>
+              <span className="bug-meter-marks">
+                <b key={earned}>{earned}</b> / {debugPoints} marks
+              </span>
+              {gain && (
+                <span key={gain.key} className="bug-meter-pop">
+                  +{gain.marks}
+                </span>
+              )}
+            </div>
+            <div className="bug-meter-track">
+              {Array.from({ length: bugs.total }, (_, i) => (
+                <div key={i} className={`bug-seg ${i < bestFixed ? "on" : ""}`}>
+                  +{graceMarks(i + 1, bugs.total, debugPoints) - graceMarks(i, bugs.total, debugPoints)}
+                </div>
+              ))}
+            </div>
+            <p className="bug-meter-note">
+              Each bug you fix earns its share, banked when you run the check. New mistakes never cost marks.
+            </p>
           </div>
-          <div className="progress-bar-bg">
-            <div
-              className={`progress-bar-fill ${progress >= 100 ? "full" : ""}`}
-              style={{ width: `${progress}%` }}
-            />
+        ) : (
+          <div className="progress-wrapper">
+            <div className="progress-label">
+              <span>Progress</span>
+              <span className="progress-percentage">{progress}%</span>
+            </div>
+            <div className="progress-bar-bg">
+              <div
+                className={`progress-bar-fill ${progress >= 100 ? "full" : ""}`}
+                style={{ width: `${progress}%` }}
+              />
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       {/* Result (keyed on attempts so it re-animates on every run) */}
@@ -181,8 +268,19 @@ export default function DebugSection({ topic, onScoreChange, onSuccess, onGiveUp
           role="status"
         >
           <span className="result-icon" aria-hidden="true">{result.success ? "✓" : "✕"}</span>
-          {/* the checker prefixes its own emoji; the icon already shows the state */}
-          <span>{String(result.message || "").replace(/^[^\p{L}\p{N}(]+/u, "")}</span>
+          {hasGrace && !result.success && fixedNow !== null ? (
+            <span>
+              This version fixes {fixedNow} of {bugs.total} bug{bugs.total === 1 ? "" : "s"}.
+              {bestFixed > fixedNow
+                ? ` Your best, ${bestFixed}, still counts.`
+                : fixedNow < bugs.total
+                ? " Keep going."
+                : ""}
+            </span>
+          ) : (
+            /* the checker prefixes its own emoji; the icon already shows the state */
+            <span>{String(result.message || "").replace(/^[^\p{L}\p{N}(]+/u, "")}</span>
+          )}
           {result.offline && <span className="result-offline">Checked offline</span>}
         </div>
       )}
@@ -208,6 +306,9 @@ export default function DebugSection({ topic, onScoreChange, onSuccess, onGiveUp
           }
           onClick={() => {
             if (attempts >= 3 && !allFixed) {
+              // count what the code fixes right now, so nothing is lost
+              const final = settle();
+              if (final.fixed > bestFixed) setBestFixed(final.fixed);
               setShowGiveUpModal(true);
             }
           }}
@@ -262,15 +363,23 @@ export default function DebugSection({ topic, onScoreChange, onSuccess, onGiveUp
               <div className="game-over-icon">⚠</div>
               <h2 className="game-over-title" id="giveup-title">Give up on this question?</h2>
               <p>
-                You keep your assembly marks but lose the debug marks,
-                and you can't come back to this question.
+                {hasGrace
+                  ? `You keep your assembly marks and the ${earned} debug mark${earned === 1 ? "" : "s"} you've earned for ${bestFixed} of ${bugs.total} bugs. You can't come back to this question.`
+                  : "You keep your assembly marks but lose the debug marks, and you can't come back to this question."}
               </p>
 
               <div className="modal-actions">
                 <button className="restart-btn" onClick={() => setShowGiveUpModal(false)} autoFocus>
                   Keep debugging
                 </button>
-                <button className="restart-btn danger" onClick={() => onGiveUp()}>
+                <button
+                  className="restart-btn danger"
+                  onClick={() => {
+                    const final = settle();
+                    onGraceChange?.(final);
+                    onGiveUp(final.marks);
+                  }}
+                >
                   Give up
                 </button>
               </div>

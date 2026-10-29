@@ -276,3 +276,98 @@
   border-radius: 3px;
   align-self: center;
 }
+
+/* ---------- Grace marks: bug meter ---------- */
+.debug-workbench .bug-meter {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+}
+
+.debug-workbench .bug-meter-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.debug-workbench .bug-meter-label b {
+  color: var(--text-primary);
+  font-size: 16px;
+}
+
+.debug-workbench .bug-meter-marks {
+  font-variant-numeric: tabular-nums;
+}
+
+.debug-workbench .bug-meter-marks b {
+  display: inline-block;
+  font-size: 20px;
+  color: var(--success-green);
+  animation: marksBump 0.5s var(--ease-spring);
+}
+
+@keyframes marksBump {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(1.25); }
+  100% { transform: scale(1); }
+}
+
+/* "+25" floating up when a bug gets fixed */
+.debug-workbench .bug-meter-pop {
+  position: absolute;
+  right: 0;
+  top: -6px;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--success-green);
+  pointer-events: none;
+  animation: gracePop 1.4s var(--ease-out) forwards;
+}
+
+@keyframes gracePop {
+  0%   { opacity: 0; transform: translateY(8px) scale(0.8); }
+  20%  { opacity: 1; transform: translateY(-4px) scale(1.15); }
+  100% { opacity: 0; transform: translateY(-34px) scale(1); }
+}
+
+.debug-workbench .bug-meter-track {
+  display: flex;
+  gap: 4px;
+}
+
+.debug-workbench .bug-seg {
+  flex: 1;
+  display: grid;
+  place-items: center;
+  height: 26px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-faint);
+  background: var(--panel-raised);
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  font-variant-numeric: tabular-nums;
+  transition: background 0.35s, color 0.35s, border-color 0.35s;
+}
+
+.debug-workbench .bug-seg.on {
+  color: var(--bg-main);
+  background: var(--success-green);
+  border-color: var(--success-green);
+  animation: segOn 0.5s var(--ease-spring);
+}
+
+@keyframes segOn {
+  0%   { transform: scaleY(0.6); filter: brightness(1.6); }
+  100% { transform: scaleY(1); filter: brightness(1); }
+}
+
+.debug-workbench .bug-meter-note {
+  margin-top: 6px;
+  font-size: 12.5px;
+  color: var(--text-faint);
+}

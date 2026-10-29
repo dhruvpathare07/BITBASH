@@ -24,9 +24,11 @@ export default function Question_3() {
 
   const [questionSolved, setQuestionSolved] = useState(false);
   const [debugProgress, setDebugProgress] = useState(0);
+  // grace marks: debug marks earned for the bugs fixed so far
+  const [debugGrace, setDebugGrace] = useState({ fixed: 0, total: 0, marks: 0 });
   const [currentTimeLeft, setCurrentTimeLeft] = useState(600);
 
-  const totalScore = (assemblyCompleted ? ASSEMBLY_POINTS : 0) + (questionSolved ? DEBUG_POINTS : 0);
+  const totalScore = (assemblyCompleted ? ASSEMBLY_POINTS : 0) + (questionSolved ? DEBUG_POINTS : debugGrace.marks);
 
   const timerRef = useRef(null);
 
@@ -167,7 +169,7 @@ export default function Question_3() {
         <div className="player-hud final-round">
           <span className="avatar">{avatarsMap(playerProfile.avatar)}</span>
           <span className="username">{playerProfile.username}</span>
-          <ScoreBoard questionNo={3} assemblyDone={assemblyCompleted} debugDone={questionSolved} debugProgress={debugProgress} assemblyPoints={ASSEMBLY_POINTS} debugPoints={DEBUG_POINTS} topicName={selectedTopic} fallbackLanguage="c" />
+          <ScoreBoard questionNo={3} assemblyDone={assemblyCompleted} debugDone={questionSolved} debugProgress={debugProgress} debugEarned={questionSolved ? DEBUG_POINTS : debugGrace.marks} debugBugs={debugGrace} assemblyPoints={ASSEMBLY_POINTS} debugPoints={DEBUG_POINTS} topicName={selectedTopic} fallbackLanguage="c" />
         </div>
       )}
 
@@ -224,15 +226,17 @@ export default function Question_3() {
             <DebugSection
               topic={selectedTopic}
               onScoreChange={setDebugProgress}
+              onGraceChange={setDebugGrace}
+              debugPoints={DEBUG_POINTS}
               language="c"
               onSuccess={() => {
                 timerRef.current?.stop();
                 setQuestionSolved(true);
                 finishQuestion(ASSEMBLY_POINTS + DEBUG_POINTS);
               }}
-              onGiveUp={() => {
+              onGiveUp={(graceMarksEarned = 0) => {
                 timerRef.current?.stop();
-                finishQuestion(ASSEMBLY_POINTS);
+                finishQuestion(ASSEMBLY_POINTS + graceMarksEarned);
               }}
             />
           )}

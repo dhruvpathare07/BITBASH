@@ -54,6 +54,8 @@ export default function ScoreBoard({
   debugPoints = 50,
   fallbackLanguage = "python",
   topicName = "",
+  debugEarned: debugEarnedProp, // grace marks so far (optional)
+  debugBugs = null,             // { fixed, total } (optional)
 }) {
   const perQuestion = assemblyPoints + debugPoints;
   const maxTotal = 3 * perQuestion;
@@ -61,7 +63,9 @@ export default function ScoreBoard({
   const saved = useMemo(() => getSavedScores(fallbackLanguage), [fallbackLanguage]);
 
   const assemblyEarned = assemblyDone ? assemblyPoints : 0;
-  const debugEarned = debugDone ? debugPoints : 0;
+  const debugEarned =
+    typeof debugEarnedProp === "number" ? debugEarnedProp : debugDone ? debugPoints : 0;
+  const hasBugs = Boolean(debugBugs?.total);
   const questionScore = assemblyEarned + debugEarned;
 
   const previous = [1, 2, 3]
@@ -83,6 +87,7 @@ export default function ScoreBoard({
 
   let hint = "Question complete";
   if (!assemblyDone) hint = `Put the lines in order to earn ${assemblyPoints}`;
+  else if (!debugDone && hasBugs) hint = `Each bug you fix earns its share of ${debugPoints}. No negative marking.`;
   else if (!debugDone) hint = `Fix every bug to earn ${debugPoints} more`;
 
   const percent = Math.min(100, Math.round((total / maxTotal) * 100));
@@ -130,10 +135,18 @@ export default function ScoreBoard({
             {assemblyEarned}/{assemblyPoints}
           </b>
         </div>
-        <div className={`sb-step ${debugDone ? "done" : assemblyDone ? "active" : ""}`}>
+        <div
+          className={`sb-step ${
+            debugDone || debugEarned >= debugPoints ? "done" : assemblyDone ? "active" : ""
+          } ${debugEarned > 0 && debugEarned < debugPoints ? "partial" : ""}`}
+        >
           <span className="sb-step-name">
             Debug
-            {!debugDone && assemblyDone ? <i className="sb-step-pct">{debugProgress}%</i> : null}
+            {!debugDone && assemblyDone ? (
+              <i className="sb-step-pct">
+                {hasBugs ? `${debugBugs.fixed}/${debugBugs.total} bugs` : `${debugProgress}%`}
+              </i>
+            ) : null}
           </span>
           <b>
             {debugEarned}/{debugPoints}

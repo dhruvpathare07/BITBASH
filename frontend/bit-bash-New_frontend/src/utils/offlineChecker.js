@@ -16,6 +16,8 @@ import { OFFLINE_CHECKER_DATA } from "../data/offlineCheckerData";
 export function normalizeLine(line) {
   return line
     .toLowerCase()
+    // ignore the prompt text inside input(...); it doesn't change the logic
+    .replace(/input\(\s*(['"]).*?\1\s*\)/g, "input()")
     .replace(/\s+/g, "")
     .replace(/\b[a-z_][a-z0-9_]*\b/g, "var");
 }
@@ -32,7 +34,7 @@ function fnv1a(bytes, seed) {
 }
 
 // Must match fingerprint() in build_offline_checker.py
-function fingerprint(salt, normalized) {
+export function fingerprint(salt, normalized) {
   const bytes = encoder.encode(`${salt}|${normalized}`);
   const a = fnv1a(bytes, 0x811c9dc5).toString(16).padStart(8, "0");
   const b = fnv1a(bytes, (0x01000193 ^ 0x5bd1e995) >>> 0).toString(16).padStart(8, "0");
@@ -40,7 +42,7 @@ function fingerprint(salt, normalized) {
 }
 
 // Same as the server: strip the whole code, drop blank lines, rstrip each
-function linesOf(code) {
+export function linesOf(code) {
   return String(code || "")
     .trim()
     .split(/\r\n|\r|\n/)

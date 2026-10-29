@@ -33,6 +33,9 @@ def normalize(line: str) -> str:
     # Must match normalize() in evaluator.py / normalize_c() in c_evaluator.py
     # and normalizeLine() in src/utils/offlineChecker.js.
     line = line.lower()
+    # Ignore the prompt text inside input(...): it doesn't change the logic,
+    # and the starting code uses prompts while the reference doesn't.
+    line = re.sub(r"input\(\s*(['\"]).*?\1\s*\)", "input()", line)
     line = re.sub(r"\s+", "", line)
     line = re.sub(r"\b[a-z_][a-z0-9_]*\b", "var", line)
     return line
