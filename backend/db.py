@@ -52,6 +52,7 @@ CREATE TABLE IF NOT EXISTS results (
     language   TEXT,
     round      INTEGER NOT NULL,
     score      INTEGER NOT NULL,
+    time_taken INTEGER,
     updated_at TEXT,
     PRIMARY KEY (username, round)
 )
@@ -66,18 +67,23 @@ def _connect():
     return sqlite3.connect(SQLITE_PATH)
 
 
-def _ensure_language_column(cur):
-    """Add the `language` column to pre-existing tables that lack it."""
-    try:
-        if _IS_PG:
-            cur.execute("ALTER TABLE results ADD COLUMN IF NOT EXISTS language TEXT")
-        else:
-            cols = [r[1] for r in cur.execute("PRAGMA table_info(results)").fetchall()]
-            if "language" not in cols:
-                cur.execute("ALTER TABLE results ADD COLUMN language TEXT")
-    except Exception:
-        # Column already exists / race with another worker — safe to ignore.
-        pass
+# Columns added after the first release; older databases get them on startup.
+_ADDED_COLUMNS = (("language", "TEXT"), ("time_taken", "INTEGER"))
+
+
+def _ensure_columns(cur):
+    """Add any newer columns to pre-existing tables that lack them."""
+    for column, kind in _ADDED_COLUMNS:
+        try:
+            if _IS_PG:
+                cur.execute(f"ALTER TABLE results ADD COLUMN IF NOT EXISTS {column} {kind}")
+            else:
+                cols = [r[1] for r in cur.execute("PRAGMA table_info(results)").fetchall()]
+                if column not in cols:
+                    cur.execute(f"ALTER TABLE results ADD COLUMN {column} {kind}")
+        except Exception:
+            # Column already exists / race with another worker — safe to ignore.
+            pass
 
 
 def init_db():
@@ -85,13 +91,14 @@ def init_db():
     try:
         cur = conn.cursor()
         cur.execute(_SCHEMA)
-        _ensure_language_column(cur)
+        _ensure_columns(cur)
         conn.commit()
     finally:
         conn.close()
 
 
-def save_result(username, name, class_name, rnd, score, language=""):
+def save_result(username, name, class_name, rnd, score, language="", time_taken=None):
+    """time_taken: seconds the player spent on this round (None if unknown)."""
     now = datetime.datetime.utcnow().isoformat()
     conn = _connect()
     try:
@@ -99,30 +106,32 @@ def save_result(username, name, class_name, rnd, score, language=""):
         if _IS_PG:
             cur.execute(
                 """
-                INSERT INTO results (username, name, class_name, language, round, score, updated_at)
-                VALUES (%s, %s, %s, %s, %s, %s, %s)
+                INSERT INTO results (username, name, class_name, language, round, score, time_taken, updated_at)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
                 ON CONFLICT (username, round)
                 DO UPDATE SET name = EXCLUDED.name,
                               class_name = EXCLUDED.class_name,
                               language = EXCLUDED.language,
                               score = EXCLUDED.score,
+                              time_taken = EXCLUDED.time_taken,
                               updated_at = EXCLUDED.updated_at
                 """,
-                (username, name, class_name, language, rnd, score, now),
+                (username, name, class_name, language, rnd, score, time_taken, now),
             )
         else:
             cur.execute(
                 """
-                INSERT INTO results (username, name, class_name, language, round, score, updated_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?)
+                INSERT INTO results (username, name, class_name, language, round, score, time_taken, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                 ON CONFLICT(username, round)
                 DO UPDATE SET name = excluded.name,
                               class_name = excluded.class_name,
                               language = excluded.language,
                               score = excluded.score,
+                              time_taken = excluded.time_taken,
                               updated_at = excluded.updated_at
                 """,
-                (username, name, class_name, language, rnd, score, now),
+                (username, name, class_name, language, rnd, score, time_taken, now),
             )
         conn.commit()
     finally:
@@ -148,14 +157,14 @@ def get_all_results():
     try:
         cur = conn.cursor()
         cur.execute(
-            "SELECT username, name, class_name, language, round, score, updated_at FROM results"
+            "SELECT username, name, class_name, language, round, score, time_taken, updated_at FROM results"
         )
         rows = cur.fetchall()
     finally:
         conn.close()
 
     players = {}
-    for username, name, class_name, language, rnd, score, updated_at in rows:
+    for username, name, class_name, language, rnd, score, time_taken, updated_at in rows:
         p = players.setdefault(
             username,
             {
@@ -165,6 +174,8 @@ def get_all_results():
                 "language": language or "",
                 "round1": None,
                 "round2": None,
+                "round1Time": None,  # seconds
+                "round2Time": None,
                 "updatedAt": updated_at,
             },
         )
@@ -176,8 +187,10 @@ def get_all_results():
             p["language"] = language
         if rnd == 1:
             p["round1"] = score
+            p["round1Time"] = time_taken
         elif rnd == 2:
             p["round2"] = score
+            p["round2Time"] = time_taken
         if updated_at and (not p["updatedAt"] or updated_at > p["updatedAt"]):
             p["updatedAt"] = updated_at
 

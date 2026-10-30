@@ -165,8 +165,9 @@ const playerTitle = getTitle();
       language: (p.language || "").toLowerCase(),
       round: 1,
       score: Math.round(totalScore),
+      timeTaken: Math.round(totalTime), // seconds across the 3 questions
     });
-  }, [totalScore]);
+  }, [totalScore, totalTime]);
 
   // Confetti animation on mount
   useEffect(() => {

@@ -331,3 +331,10 @@
 .admin-danger-solid:hover:not(:disabled) {
   filter: brightness(1.08);
 }
+
+/* time-taken columns (m:ss) */
+.admin-table td.time {
+  font-family: var(--font-code);
+  font-size: 0.9em;
+  color: var(--text-secondary);
+}

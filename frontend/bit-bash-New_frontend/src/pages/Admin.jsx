@@ -7,21 +7,21 @@ const COLUMNS = [
   { key: "name", label: "Name", sortable: true },
   { key: "className", label: "Class", sortable: true },
   { key: "round1", label: "Round 1", sortable: true, num: true },
+  { key: "round1Time", label: "R1 Time", sortable: true, num: true },
   { key: "round2", label: "Round 2", sortable: true, num: true },
+  { key: "round2Time", label: "R2 Time", sortable: true, num: true },
   { key: "total", label: "Total", sortable: true, num: true },
-  { key: "updatedAt", label: "Last Played", sortable: true },
 ];
+
+const TIME_KEYS = ["round1Time", "round2Time"];
 
 const withTotal = (r) => (r.round1 || 0) + (r.round2 || 0);
 
-const fmtDate = (iso) => {
-  if (!iso) return "—";
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return "—";
-  return d.toLocaleString(undefined, {
-    dateStyle: "medium",
-    timeStyle: "short",
-  });
+// seconds -> "m:ss" (e.g. 754 -> "12:34"); empty when not recorded
+const fmtTime = (seconds) => {
+  if (seconds === null || seconds === undefined || Number.isNaN(Number(seconds))) return "";
+  const s = Math.max(0, Math.round(Number(seconds)));
+  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
 };
 
 export default function Admin() {
@@ -104,7 +104,7 @@ export default function Admin() {
     setSort((s) =>
       s.key === key
         ? { key, dir: s.dir === "asc" ? "desc" : "asc" }
-        : { key, dir: key === "name" || key === "className" ? "asc" : "desc" }
+        : { key, dir: key === "name" || key === "className" || TIME_KEYS.includes(key) ? "asc" : "desc" }
     );
   };
 
@@ -116,6 +116,14 @@ export default function Admin() {
     arr.sort((a, b) => {
       let av;
       let bv;
+      if (TIME_KEYS.includes(key)) {
+        const at = a[key];
+        const bt = b[key];
+        if (at == null && bt == null) return 0;
+        if (at == null) return 1; // no time recorded: always at the bottom
+        if (bt == null) return -1;
+        return (at - bt) * factor;
+      }
       if (key === "total") {
         av = withTotal(a);
         bv = withTotal(b);
@@ -141,9 +149,10 @@ export default function Admin() {
       "Class",
       "Language",
       "Round 1",
+      "R1 Time",
       "Round 2",
+      "R2 Time",
       "Total",
-      "Last Played",
     ];
     const esc = (v) => `"${String(v ?? "").replace(/"/g, '""')}"`;
     const lines = sortedRows.map((r, i) =>
@@ -154,9 +163,10 @@ export default function Admin() {
         r.className || "",
         r.language || "",
         r.round1 ?? "",
+        fmtTime(r.round1Time),
         r.round2 ?? "",
+        fmtTime(r.round2Time),
         withTotal(r),
-        r.updatedAt || "",
       ]
         .map(esc)
         .join(",")
@@ -248,9 +258,10 @@ export default function Admin() {
                 <td>{r.name || r.username}</td>
                 <td>{r.className || "—"}</td>
                 <td className="num">{r.round1 ?? "—"}</td>
+                <td className="num time">{fmtTime(r.round1Time) || "—"}</td>
                 <td className="num">{r.round2 ?? "—"}</td>
+                <td className="num time">{fmtTime(r.round2Time) || "—"}</td>
                 <td className="num total">{withTotal(r)}</td>
-                <td>{fmtDate(r.updatedAt)}</td>
               </tr>
             ))}
           </tbody>

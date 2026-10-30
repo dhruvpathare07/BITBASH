@@ -247,6 +247,9 @@ def evaluate_c_code(topic, code, attempts):
 
 # Highest score each round can legitimately reach.
 MAX_ROUND_SCORE = {1: 300, 2: 100}
+# Longest a round can take, in seconds (Round 1: 3 questions x 10 min,
+# Round 2: 30 min). Times outside this are ignored, not rejected.
+MAX_ROUND_SECONDS = {1: 3 * 600, 2: 30 * 60}
 
 
 @app.route("/results", methods=["POST", "OPTIONS"])
@@ -279,7 +282,15 @@ def submit_result():
         if not (0 <= score <= MAX_ROUND_SCORE[rnd]):
             return jsonify(success=False, error="Score out of range"), 400
 
-        save_result(username[:60], name[:80], class_name[:40], rnd, score, language)
+        # Optional: seconds spent on the round (shown in the admin panel)
+        try:
+            time_taken = int(data.get("timeTaken"))
+            if not (0 <= time_taken <= MAX_ROUND_SECONDS[rnd]):
+                time_taken = None
+        except (TypeError, ValueError):
+            time_taken = None
+
+        save_result(username[:60], name[:80], class_name[:40], rnd, score, language, time_taken)
         return jsonify(success=True)
     except Exception:
         logger.exception("Error in /results")

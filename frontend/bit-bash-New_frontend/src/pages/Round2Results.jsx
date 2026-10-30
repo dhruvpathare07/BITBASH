@@ -60,6 +60,13 @@ export default function Round2Results() {
       language: (results.language || profile.language || "").toLowerCase(),
       round: 2,
       score: Math.round(results.score ?? 0),
+      // seconds spent in the maze round (same figure the page shows)
+      timeTaken: Math.round(
+        results.timeUsed ??
+          (results.timeRemaining != null
+            ? 1800 - results.timeRemaining
+            : (results.questionResults || []).reduce((sum, q) => sum + (q.timeTaken || 0), 0))
+      ),
     });
   }, [results, profile]);
 
