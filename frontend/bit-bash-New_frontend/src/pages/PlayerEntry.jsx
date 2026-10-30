@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import "./PlayerEntry.css";
+import { clearRound2Order } from "../utils/shuffleRound2";
 
 const avatars = [
   { id: 0, emoji: "🐶", label: "Puppy" },
@@ -66,6 +67,7 @@ export default function PlayerEntry() {
     sessionStorage.removeItem("bbbProgress");
     sessionStorage.removeItem("bbbResults");
     sessionStorage.removeItem("round1ResultsSeen");
+    clearRound2Order(); // new player -> new Round 2 question/option order
 
     // Navigate to correct language folder
     // 👈 DYNAMIC ROUTE BASED ON LANGUAGE

@@ -7,6 +7,7 @@ import {
   validateLogicMazeQuestions,
 } from "../data/logicMazeQuestions";
 import { LOGIC_MAZE_MAPS } from "../data/logicMazeMaps";
+import { shuffledRound2Questions } from "../utils/shuffleRound2";
 import "./LogicMaze.css";
 
 const LETTERS = ["A", "B", "C", "D"];
@@ -29,7 +30,11 @@ export default function LogicMaze() {
       ? "c"
       : "python";
 
-  const questions = LOGIC_MAZE_QUESTIONS[language];
+  // Shuffled per player: question order and each question's options
+  const questions = useMemo(
+    () => shuffledRound2Questions(language, LOGIC_MAZE_QUESTIONS[language]),
+    [language]
+  );
 
 
   const [questionIndex, setQuestionIndex] = useState(0);
