@@ -5,6 +5,7 @@ DATABASE_URL is set (e.g. on Vercel). Both share the same schema and upsert
 logic, keyed by (username, round) so a player's score is updated, not duplicated.
 """
 import os
+import json
 import datetime
 
 def _find_database_url():
@@ -53,6 +54,7 @@ CREATE TABLE IF NOT EXISTS results (
     round      INTEGER NOT NULL,
     score      INTEGER NOT NULL,
     time_taken INTEGER,
+    details    TEXT,
     updated_at TEXT,
     PRIMARY KEY (username, round)
 )
@@ -68,7 +70,7 @@ def _connect():
 
 
 # Columns added after the first release; older databases get them on startup.
-_ADDED_COLUMNS = (("language", "TEXT"), ("time_taken", "INTEGER"))
+_ADDED_COLUMNS = (("language", "TEXT"), ("time_taken", "INTEGER"), ("details", "TEXT"))
 
 
 def _ensure_columns(cur):
@@ -97,8 +99,9 @@ def init_db():
         conn.close()
 
 
-def save_result(username, name, class_name, rnd, score, language="", time_taken=None):
-    """time_taken: seconds the player spent on this round (None if unknown)."""
+def save_result(username, name, class_name, rnd, score, language="", time_taken=None, details=None):
+    """time_taken: seconds spent on this round (None if unknown).
+    details: JSON text with the round's breakdown (per question), or None."""
     now = datetime.datetime.utcnow().isoformat()
     conn = _connect()
     try:
@@ -106,32 +109,34 @@ def save_result(username, name, class_name, rnd, score, language="", time_taken=
         if _IS_PG:
             cur.execute(
                 """
-                INSERT INTO results (username, name, class_name, language, round, score, time_taken, updated_at)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                INSERT INTO results (username, name, class_name, language, round, score, time_taken, details, updated_at)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
                 ON CONFLICT (username, round)
                 DO UPDATE SET name = EXCLUDED.name,
                               class_name = EXCLUDED.class_name,
                               language = EXCLUDED.language,
                               score = EXCLUDED.score,
                               time_taken = EXCLUDED.time_taken,
+                              details = EXCLUDED.details,
                               updated_at = EXCLUDED.updated_at
                 """,
-                (username, name, class_name, language, rnd, score, time_taken, now),
+                (username, name, class_name, language, rnd, score, time_taken, details, now),
             )
         else:
             cur.execute(
                 """
-                INSERT INTO results (username, name, class_name, language, round, score, time_taken, updated_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                INSERT INTO results (username, name, class_name, language, round, score, time_taken, details, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
                 ON CONFLICT(username, round)
                 DO UPDATE SET name = excluded.name,
                               class_name = excluded.class_name,
                               language = excluded.language,
                               score = excluded.score,
                               time_taken = excluded.time_taken,
+                              details = excluded.details,
                               updated_at = excluded.updated_at
                 """,
-                (username, name, class_name, language, rnd, score, time_taken, now),
+                (username, name, class_name, language, rnd, score, time_taken, details, now),
             )
         conn.commit()
     finally:
@@ -157,14 +162,18 @@ def get_all_results():
     try:
         cur = conn.cursor()
         cur.execute(
-            "SELECT username, name, class_name, language, round, score, time_taken, updated_at FROM results"
+            "SELECT username, name, class_name, language, round, score, time_taken, details, updated_at FROM results"
         )
         rows = cur.fetchall()
     finally:
         conn.close()
 
     players = {}
-    for username, name, class_name, language, rnd, score, time_taken, updated_at in rows:
+    for username, name, class_name, language, rnd, score, time_taken, details, updated_at in rows:
+        try:
+            parsed = json.loads(details) if details else None
+        except ValueError:
+            parsed = None
         p = players.setdefault(
             username,
             {
@@ -176,6 +185,8 @@ def get_all_results():
                 "round2": None,
                 "round1Time": None,  # seconds
                 "round2Time": None,
+                "round1Details": None,  # per-question breakdown
+                "round2Details": None,
                 "updatedAt": updated_at,
             },
         )
@@ -188,9 +199,11 @@ def get_all_results():
         if rnd == 1:
             p["round1"] = score
             p["round1Time"] = time_taken
+            p["round1Details"] = parsed
         elif rnd == 2:
             p["round2"] = score
             p["round2Time"] = time_taken
+            p["round2Details"] = parsed
         if updated_at and (not p["updatedAt"] or updated_at > p["updatedAt"]):
             p["updatedAt"] = updated_at
 

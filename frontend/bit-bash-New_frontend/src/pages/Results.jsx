@@ -166,8 +166,18 @@ const playerTitle = getTitle();
       round: 1,
       score: Math.round(totalScore),
       timeTaken: Math.round(totalTime), // seconds across the 3 questions
+      // per-question breakdown for the admin panel's details popup
+      details: {
+        questions: scoreData.map((q) => ({
+          question: q.questionNum,
+          topic: q.topic || null,
+          score: q.score ?? 0,
+          timeTaken: q.timeTaken ?? 0,
+          bugsFixed: q.bugsFixed || null,
+        })),
+      },
     });
-  }, [totalScore, totalTime]);
+  }, [totalScore, totalTime, scoreData]);
 
   // Confetti animation on mount
   useEffect(() => {

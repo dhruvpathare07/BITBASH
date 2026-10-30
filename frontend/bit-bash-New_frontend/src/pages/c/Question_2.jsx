@@ -76,6 +76,8 @@ export default function Question_2() {
     const resultData = {
       score: finalScore,
       timeTaken,
+      topic: selectedTopic, // shown in the admin panel's details
+      bugsFixed: debugGrace.total ? `${debugGrace.fixed}/${debugGrace.total}` : null,
     };
 
     const language =

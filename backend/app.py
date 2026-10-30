@@ -1,3 +1,4 @@
+import json
 import logging
 import os
 import time
@@ -88,6 +89,8 @@ def health():
         database=(f"postgres (from {DATABASE_ENV_NAME})" if _IS_PG
                   else "sqlite (local only; set DATABASE_URL in production)"),
         admin="configured" if ADMIN_PASSKEY else "not configured (set ADMIN_PASSKEY)",
+        # which code is running (Vercel sets this); helps confirm a redeploy
+        version=(os.environ.get("VERCEL_GIT_COMMIT_SHA") or "local")[:7],
         # names only, never values: helps spot a database added under another name
         database_settings_seen=db_like,
     )
@@ -290,7 +293,16 @@ def submit_result():
         except (TypeError, ValueError):
             time_taken = None
 
-        save_result(username[:60], name[:80], class_name[:40], rnd, score, language, time_taken)
+        # Optional: the round's breakdown (per question) for the admin panel
+        details = data.get("details")
+        if isinstance(details, (dict, list)):
+            details = json.dumps(details, separators=(",", ":"))
+            if len(details) > 8000:  # keep rows small; drop oversized payloads
+                details = None
+        else:
+            details = None
+
+        save_result(username[:60], name[:80], class_name[:40], rnd, score, language, time_taken, details)
         return jsonify(success=True)
     except Exception:
         logger.exception("Error in /results")

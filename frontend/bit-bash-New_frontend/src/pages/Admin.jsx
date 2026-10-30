@@ -7,15 +7,21 @@ const COLUMNS = [
   { key: "name", label: "Name", sortable: true },
   { key: "className", label: "Class", sortable: true },
   { key: "round1", label: "Round 1", sortable: true, num: true },
-  { key: "round1Time", label: "R1 Time", sortable: true, num: true },
   { key: "round2", label: "Round 2", sortable: true, num: true },
-  { key: "round2Time", label: "R2 Time", sortable: true, num: true },
   { key: "total", label: "Total", sortable: true, num: true },
+  { key: "totalTime", label: "Total Time", sortable: true, num: true },
+  { key: "details", label: "", sortable: false },
 ];
 
-const TIME_KEYS = ["round1Time", "round2Time"];
+const TIME_KEYS = ["totalTime"];
 
 const withTotal = (r) => (r.round1 || 0) + (r.round2 || 0);
+
+// Total time used across both rounds (seconds); null if neither was recorded
+const totalTimeOf = (r) =>
+  r.round1Time == null && r.round2Time == null
+    ? null
+    : (r.round1Time || 0) + (r.round2Time || 0);
 
 // seconds -> "m:ss" (e.g. 754 -> "12:34"); empty when not recorded
 const fmtTime = (seconds) => {
@@ -38,6 +44,9 @@ export default function Admin() {
   const [clearing, setClearing] = useState(false);
   const [clearError, setClearError] = useState("");
   const [notice, setNotice] = useState("");
+
+  // Player whose full results are shown in the details popup
+  const [detailsFor, setDetailsFor] = useState(null);
 
   const openClear = () => {
     setConfirmText("");
@@ -117,8 +126,8 @@ export default function Admin() {
       let av;
       let bv;
       if (TIME_KEYS.includes(key)) {
-        const at = a[key];
-        const bt = b[key];
+        const at = totalTimeOf(a);
+        const bt = totalTimeOf(b);
         if (at == null && bt == null) return 0;
         if (at == null) return 1; // no time recorded: always at the bottom
         if (bt == null) return -1;
@@ -153,6 +162,7 @@ export default function Admin() {
       "Round 2",
       "R2 Time",
       "Total",
+      "Total Time",
     ];
     const esc = (v) => `"${String(v ?? "").replace(/"/g, '""')}"`;
     const lines = sortedRows.map((r, i) =>
@@ -167,6 +177,7 @@ export default function Admin() {
         r.round2 ?? "",
         fmtTime(r.round2Time),
         withTotal(r),
+        fmtTime(totalTimeOf(r)),
       ]
         .map(esc)
         .join(",")
@@ -258,10 +269,16 @@ export default function Admin() {
                 <td>{r.name || r.username}</td>
                 <td>{r.className || "—"}</td>
                 <td className="num">{r.round1 ?? "—"}</td>
-                <td className="num time">{fmtTime(r.round1Time) || "—"}</td>
                 <td className="num">{r.round2 ?? "—"}</td>
-                <td className="num time">{fmtTime(r.round2Time) || "—"}</td>
                 <td className="num total">{withTotal(r)}</td>
+                <td className="num time" title={totalTimeOf(r) == null ? "No time recorded" : undefined}>
+                  {fmtTime(totalTimeOf(r)) || "—"}
+                </td>
+                <td className="num">
+                  <button type="button" className="admin-details-btn" onClick={() => setDetailsFor(r)}>
+                    Details
+                  </button>
+                </td>
               </tr>
             ))}
           </tbody>
@@ -309,6 +326,10 @@ export default function Admin() {
 
         {groups.map(renderTable)}
       </div>
+
+      {detailsFor && (
+        <PlayerDetails player={detailsFor} onClose={() => setDetailsFor(null)} />
+      )}
 
       {showClear && (
         <div
@@ -370,6 +391,139 @@ export default function Admin() {
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+/* Full results for one player: both rounds, question by question */
+function PlayerDetails({ player: p, onClose }) {
+  const r1 = p.round1Details?.questions || [];
+  const r2 = p.round2Details || {};
+  const challenges = r2.challenges || [];
+  const statusText =
+    r2.status === "completed" ? "Finished all challenges." : r2.status === "time-up" ? "Time ran out." : null;
+
+  return (
+    <div className="admin-modal-overlay" onClick={onClose} onKeyDown={(e) => e.key === "Escape" && onClose()}>
+      <div
+        className="admin-modal admin-details"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="details-title"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="admin-details-head">
+          <div>
+            <h2 id="details-title">{p.name || p.username}</h2>
+            <p>
+              @{p.username}, {p.className || "no class"},{" "}
+              {p.language ? p.language.toUpperCase() : "language not recorded"}
+            </p>
+          </div>
+          <button type="button" className="admin-refresh" onClick={onClose} autoFocus>
+            Close
+          </button>
+        </div>
+
+        <div className="admin-details-totals">
+          <div>
+            <span>Total marks</span>
+            <b>
+              {withTotal(p)}
+              <small> / 400</small>
+            </b>
+          </div>
+          <div>
+            <span>Total time used</span>
+            <b>{fmtTime(totalTimeOf(p)) || "—"}</b>
+          </div>
+        </div>
+
+        <section className="admin-details-round">
+          <h3>
+            Round 1{" "}
+            <span>
+              {p.round1 ?? "—"} / 300, {fmtTime(p.round1Time) || "time not recorded"}
+            </span>
+          </h3>
+          {r1.length ? (
+            <table className="admin-table admin-mini">
+              <thead>
+                <tr>
+                  <th>Question</th>
+                  <th>Topic</th>
+                  <th className="num">Marks</th>
+                  <th className="num">Bugs fixed</th>
+                  <th className="num">Time</th>
+                </tr>
+              </thead>
+              <tbody>
+                {r1.map((q) => (
+                  <tr key={q.question}>
+                    <td>Q{q.question}</td>
+                    <td>{q.topic || "—"}</td>
+                    <td className="num">{q.score} / 100</td>
+                    <td className="num">{q.bugsFixed || "—"}</td>
+                    <td className="num time">{fmtTime(q.timeTaken) || "—"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          ) : (
+            <p className="admin-details-empty">
+              {p.round1 == null
+                ? "Not played yet."
+                : "Question-by-question details weren't recorded for this player."}
+            </p>
+          )}
+        </section>
+
+        <section className="admin-details-round">
+          <h3>
+            Round 2{" "}
+            <span>
+              {p.round2 ?? "—"} / 100, {fmtTime(p.round2Time) || "time not recorded"}
+            </span>
+          </h3>
+          {p.round2Details ? (
+            <>
+              <p className="admin-details-meta">
+                {r2.solved != null && `Solved ${r2.solved} of ${r2.totalChallenges || 10}. `}
+                {r2.exitsTried != null && `Exits tried: ${r2.exitsTried}. `}
+                {statusText}
+              </p>
+              {challenges.length ? (
+                <table className="admin-table admin-mini">
+                  <thead>
+                    <tr>
+                      <th>Challenge</th>
+                      <th className="num">Marks</th>
+                      <th className="num">Time</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {challenges.map((c, i) => (
+                      <tr key={`${c.challenge}-${i}`}>
+                        <td>#{c.challenge}</td>
+                        <td className="num">{c.score} / 10</td>
+                        <td className="num time">{fmtTime(c.timeTaken) || "—"}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              ) : (
+                <p className="admin-details-empty">No challenges solved.</p>
+              )}
+            </>
+          ) : (
+            <p className="admin-details-empty">
+              {p.round2 == null
+                ? "Not played yet."
+                : "Challenge-by-challenge details weren't recorded for this player."}
+            </p>
+          )}
+        </section>
+      </div>
     </div>
   );
 }

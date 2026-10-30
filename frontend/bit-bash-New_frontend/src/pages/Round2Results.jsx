@@ -67,6 +67,18 @@ export default function Round2Results() {
             ? 1800 - results.timeRemaining
             : (results.questionResults || []).reduce((sum, q) => sum + (q.timeTaken || 0), 0))
       ),
+      // per-challenge breakdown for the admin panel's details popup
+      details: {
+        challenges: (results.questionResults || []).map((q, i) => ({
+          challenge: q.questionNum ?? i + 1,
+          score: q.score ?? 0,
+          timeTaken: q.timeTaken ?? 0,
+        })),
+        solved: results.questionsCompleted ?? null,
+        totalChallenges: results.totalQuestions ?? 10,
+        exitsTried: results.attempts ?? null,
+        status: results.status || null, // "completed" or "time-up"
+      },
     });
   }, [results, profile]);
 

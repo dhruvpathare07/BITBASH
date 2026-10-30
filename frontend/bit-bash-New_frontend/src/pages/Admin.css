@@ -338,3 +338,77 @@
   font-size: 0.9em;
   color: var(--text-secondary);
 }
+
+/* Details button in each row */
+.admin-details-btn {
+  padding: 5px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  background: var(--panel-raised);
+  border: 1px solid var(--line-strong);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+.admin-details-btn:hover {
+  border-color: var(--accent-pink);
+  background: rgba(255, 79, 176, 0.12);
+}
+
+/* Player details popup */
+.admin-modal.admin-details {
+  width: min(720px, 100%);
+  max-height: calc(100vh - 48px);
+  overflow-y: auto;
+  border-top-color: var(--accent-pink);
+}
+.admin-details-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+.admin-details-head h2 { margin: 0 0 4px; }
+.admin-details-head p { margin: 0; }
+.admin-details-totals {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+.admin-details-totals > div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 12px 14px;
+  background: var(--panel-sunken);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+}
+.admin-details-totals span { font-size: 13px; color: var(--text-secondary); }
+.admin-details-totals b { font-size: 26px; font-variant-numeric: tabular-nums; }
+.admin-details-totals small { font-size: 14px; color: var(--text-faint); font-weight: 500; }
+.admin-details-round { margin-top: 14px; }
+.admin-details-round h3 {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
+  margin: 0 0 8px;
+  font-size: 17px;
+}
+.admin-details-round h3 span {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+.admin-details-meta { font-size: 14px; margin: 0 0 8px !important; }
+.admin-details-empty { font-size: 14px; color: var(--text-faint) !important; }
+.admin-table.admin-mini th,
+.admin-table.admin-mini td {
+  padding: 8px 12px;
+  font-size: 14px;
+}

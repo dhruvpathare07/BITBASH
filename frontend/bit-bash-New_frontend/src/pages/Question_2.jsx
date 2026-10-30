@@ -109,6 +109,8 @@ const finishQuestion = (finalScore = totalScore) => {
   const resultData = {
     score: finalScore,
     timeTaken,
+    topic: selectedTopic, // shown in the admin panel's details
+    bugsFixed: debugGrace.total ? `${debugGrace.fixed}/${debugGrace.total}` : null,
   };
 
   const language = playerProfile.language?.toLowerCase() || "python";
