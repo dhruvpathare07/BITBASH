@@ -67,6 +67,18 @@ CORS(
 )
 
 
+@app.route("/", methods=["GET"])
+def health():
+    """Quick check that the backend is up (e.g. after a Vercel deploy).
+    Says what is configured, never the values themselves."""
+    from db import _IS_PG
+    return jsonify(
+        status="ok",
+        database="postgres" if _IS_PG else "sqlite (local only; set DATABASE_URL in production)",
+        admin="configured" if ADMIN_PASSKEY else "not configured (set ADMIN_PASSKEY)",
+    )
+
+
 @app.errorhandler(413)
 def request_too_large(_e):
     return jsonify(success=False, error="Request too large"), 413
