@@ -52,10 +52,17 @@ ADMIN_PASSKEY = os.environ.get("ADMIN_PASSKEY", "")
 
 init_db()
 
-# Frontend origin(s), comma-separated; defaults to the Vite dev server.
-ALLOWED_ORIGINS = [
-    o.strip()
-    for o in os.environ.get("ALLOWED_ORIGINS", "http://localhost:5173").split(",")
+# Frontend origin(s) allowed to call this backend. Always allowed: the local
+# Vite dev server and the deployed game on Vercel. Add more (e.g. a custom
+# domain) with the ALLOWED_ORIGINS env var, comma-separated.
+DEFAULT_ORIGINS = [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "https://bit-bash-imtq.vercel.app",
+]
+ALLOWED_ORIGINS = DEFAULT_ORIGINS + [
+    o.strip().rstrip("/")
+    for o in os.environ.get("ALLOWED_ORIGINS", "").split(",")
     if o.strip()
 ]
 
