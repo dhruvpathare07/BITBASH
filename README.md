@@ -105,7 +105,8 @@ the LAN/internet and the game keeps working on every PC until the end:
 
 ### Deploy (two Vercel projects from this repo)
 
-1. **Backend**: new Vercel project, *Root Directory* = `backend`.
+1. **Backend**: new Vercel project, *Root Directory* = `backend`, *Framework Preset* =
+   **Flask** (Vercel runs `app.py` directly; no `vercel.json` needed).
    Environment variables:
    * `DATABASE_URL`: a Postgres database (e.g. Vercel Postgres / Neon). Required,
      otherwise scores are not kept.
