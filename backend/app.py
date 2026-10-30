@@ -113,8 +113,9 @@ PENALTY_PER_FAIL = 2
 
 
 @app.route("/evaluate", methods=["POST", "OPTIONS"])
-# Sized for ~80 lab PCs that usually share one public IP.
-@rate_limit(600, 60)
+# Capacity: sized for up to 200 players, who in a lab usually share one
+# public IP (~4 checks/player/min at peak = 800/min, with headroom).
+@rate_limit(1500, 60)
 def evaluate():
     if request.method == "OPTIONS":
         return "", 200
@@ -223,7 +224,8 @@ MAX_ROUND_SCORE = {1: 300, 2: 100}
 
 
 @app.route("/results", methods=["POST", "OPTIONS"])
-@rate_limit(400, 60)
+# Up to 200 players x 2 rounds can arrive in one burst when the network returns.
+@rate_limit(1000, 60)
 def submit_result():
     if request.method == "OPTIONS":
         return "", 200
