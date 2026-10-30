@@ -71,11 +71,18 @@ CORS(
 def health():
     """Quick check that the backend is up (e.g. after a Vercel deploy).
     Says what is configured, never the values themselves."""
-    from db import _IS_PG
+    from db import _IS_PG, DATABASE_ENV_NAME
+    db_like = sorted(
+        n for n in os.environ
+        if any(k in n for k in ("DATABASE", "POSTGRES", "PG", "NEON", "STORAGE"))
+    )
     return jsonify(
         status="ok",
-        database="postgres" if _IS_PG else "sqlite (local only; set DATABASE_URL in production)",
+        database=(f"postgres (from {DATABASE_ENV_NAME})" if _IS_PG
+                  else "sqlite (local only; set DATABASE_URL in production)"),
         admin="configured" if ADMIN_PASSKEY else "not configured (set ADMIN_PASSKEY)",
+        # names only, never values: helps spot a database added under another name
+        database_settings_seen=db_like,
     )
 
 

@@ -7,8 +7,31 @@ logic, keyed by (username, round) so a player's score is updated, not duplicated
 import os
 import datetime
 
-DATABASE_URL = os.environ.get("DATABASE_URL", "").strip()
-_IS_PG = DATABASE_URL.startswith("postgres")
+def _find_database_url():
+    """Find the Postgres connection string.
+
+    Vercel's database integrations don't always call it DATABASE_URL: Neon
+    may add POSTGRES_URL, or a custom prefix like STORAGE_URL. Use the first
+    postgres:// value among the usual names, preferring pooled connections.
+    Returns (variable_name, url) or ("", "").
+    """
+    env = os.environ
+    for name in ("DATABASE_URL", "POSTGRES_URL", "NEON_DATABASE_URL"):
+        value = env.get(name, "").strip()
+        if value.startswith("postgres"):
+            return name, value
+    candidates = sorted(
+        name for name, value in env.items()
+        if name.endswith("_URL") and value.strip().startswith("postgres")
+    )
+    pooled = [n for n in candidates if "UNPOOLED" not in n and "NON_POOLING" not in n]
+    for name in pooled + candidates:
+        return name, env[name].strip()
+    return "", ""
+
+
+DATABASE_ENV_NAME, DATABASE_URL = _find_database_url()
+_IS_PG = bool(DATABASE_URL)
 
 # SQLite file lives next to this module and is gitignored.
 SQLITE_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "results.db")
