@@ -1,10 +1,9 @@
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import html2canvas from "html2canvas";
-import jsPDF from "jspdf";
 import { useNavigate } from "react-router-dom";
 import "./Round2Results.css";
 import { postResult } from "../config";
+import { loadPdfTools } from "../utils/loadPdfTools";
 
 export default function Round2Results() {
   const navigate = useNavigate();
@@ -150,6 +149,8 @@ export default function Round2Results() {
     try {
       element.classList.add("pdf-mode");
       await new Promise((resolve) => setTimeout(resolve, 200));
+
+      const { html2canvas, jsPDF } = await loadPdfTools();
 
       const canvas = await html2canvas(element, {
         scale: 2,

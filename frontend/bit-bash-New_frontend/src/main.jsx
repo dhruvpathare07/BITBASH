@@ -18,6 +18,14 @@ if (import.meta.env.PROD && 'serviceWorker' in navigator) {
   })
 }
 
+// Tell the loader in index.html the game started, so it won't retry
+window.__bbbBooted = true
+try {
+  sessionStorage.removeItem('bbbBootRetries')
+} catch {
+  /* storage blocked: nothing to reset */
+}
+
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <App />

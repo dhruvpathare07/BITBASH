@@ -5,6 +5,74 @@
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>bit-bash-bonanza</title>
+    <script>
+      // When many lab PCs open the game at once from one internet address,
+      // Vercel's firewall can briefly refuse the game files. Instead of a
+      // blank page, wait a little (a different time on each PC) and reload.
+      (function () {
+        var KEY = "bbbBootRetries";
+        var MAX_RETRIES = 8;
+        var scheduled = false;
+
+        function show(html) {
+          var root = document.getElementById("root");
+          if (!root) return;
+          root.innerHTML =
+            '<div style="min-height:100vh;display:grid;place-items:center;background:#070b18;' +
+            'color:#eef1ff;font-family:Arial,sans-serif;text-align:center;padding:24px">' +
+            '<div><div style="color:#45efff;font-weight:900;letter-spacing:3px;font-size:14px">' +
+            "BIT BASH BONANZA</div>" + html + "</div></div>";
+        }
+
+        function retry() {
+          if (scheduled || window.__bbbBooted) return;
+          scheduled = true;
+
+          var tries = 0;
+          try { tries = Number(sessionStorage.getItem(KEY)) || 0; } catch (e) {}
+
+          if (tries >= MAX_RETRIES) {
+            show(
+              '<p style="margin:18px 0">The game could not load. Please tell an organiser.</p>' +
+              '<button onclick="location.reload()" style="padding:10px 22px;font-size:15px;' +
+              'background:#43baff;border:0;border-radius:4px;cursor:pointer">Try again</button>'
+            );
+            return;
+          }
+          try { sessionStorage.setItem(KEY, String(tries + 1)); } catch (e) {}
+
+          // Vercel asks clients to wait about 30 s; spread PCs out so they
+          // don't all come back at the same second.
+          var seconds = Math.round(Math.min(25 + tries * 10, 60) + Math.random() * 15);
+          var tick = function () {
+            show(
+              '<p style="margin:18px 0 6px;font-size:18px">Loading the game…</p>' +
+              '<p style="color:#929bbd;margin:0">The server is busy. Retrying in ' + seconds + " s</p>"
+            );
+            if (seconds-- <= 0) location.reload();
+            else setTimeout(tick, 1000);
+          };
+          tick();
+        }
+
+        // A game file (script or stylesheet) failed to load
+        window.addEventListener(
+          "error",
+          function (event) {
+            var el = event.target;
+            if (el && (el.tagName === "SCRIPT" || el.tagName === "LINK")) retry();
+          },
+          true
+        );
+
+        // Or it loaded but wasn't the game (e.g. a firewall page instead)
+        window.addEventListener("load", function () {
+          setTimeout(function () {
+            if (!window.__bbbBooted) retry();
+          }, 1500);
+        });
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>
