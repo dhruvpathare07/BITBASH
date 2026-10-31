@@ -1,22 +1,32 @@
+// Round 2 mazes: one per challenge, the same for every player (seeded).
+//
+// Each maze is a grid of cells with walls on their four sides, carved by a
+// randomized depth-first search (long winding corridors and real dead
+// ends). Medium difficulty: 19 x 13 cells with a few extra openings so
+// there's more than one route, and the four exits spread over three sides.
 
-const COLS = 31;
-const ROWS = 21;
-
-const DIRECTIONS = [
-  { dr: -2, dc: 0, wallDr: -1, wallDc: 0 },
-  { dr: 2, dc: 0, wallDr: 1, wallDc: 0 },
-  { dr: 0, dc: -2, wallDr: 0, wallDc: -1 },
-  { dr: 0, dc: 2, wallDr: 0, wallDc: 1 },
-];
+export const MAZE_COLS = 19;
+export const MAZE_ROWS = 13;
 
 const EXIT_LETTERS = ["A", "B", "C", "D"];
 
-// Put exits on different sides instead of grouping them along the bottom.
+// Players enter on the left; exits sit on the top, right and bottom edges.
+const START = { x: 0, y: 6, side: "left" };
 const EXIT_POSITIONS = [
-  { row: 3, col: 0 },          // A: left side
-  { row: 17, col: COLS - 1 },  // B: right side
-  { row: ROWS - 1, col: 7 },   // C: bottom
-  { row: ROWS - 1, col: 23 },  // D: bottom
+  { x: 13, y: 0, side: "top" },                         // A
+  { x: MAZE_COLS - 1, y: 3, side: "right" },            // B
+  { x: 8, y: MAZE_ROWS - 1, side: "bottom" },           // C
+  { x: MAZE_COLS - 1, y: MAZE_ROWS - 3, side: "right" }, // D
+];
+
+// Share of the remaining inner walls knocked down to add alternate routes
+const LOOP_SHARE = 0.06;
+
+const STEPS = [
+  { dx: 0, dy: -1, wall: "top", opposite: "bottom" },
+  { dx: 1, dy: 0, wall: "right", opposite: "left" },
+  { dx: 0, dy: 1, wall: "bottom", opposite: "top" },
+  { dx: -1, dy: 0, wall: "left", opposite: "right" },
 ];
 
 function seededRandom(seed) {
@@ -41,118 +51,72 @@ function shuffle(items, random) {
 
 function generateMaze(seed) {
   const random = seededRandom(seed);
-  const grid = Array.from({ length: ROWS }, () => Array(COLS).fill("#"));
+  const cells = Array.from({ length: MAZE_ROWS }, () =>
+    Array.from({ length: MAZE_COLS }, () => ({
+      top: true,
+      right: true,
+      bottom: true,
+      left: true,
+    }))
+  );
+  const visited = cells.map((row) => row.map(() => false));
 
-  const start = { row: 0, col: 15 };
-  const innerStart = { row: 1, col: 15 };
-
-  grid[innerStart.row][innerStart.col] = " ";
-
-  // Randomized depth-first search creates winding corridors and dead ends.
-  const stack = [innerStart];
+  // Iterative depth-first search (no recursion limit to worry about)
+  const stack = [{ x: START.x, y: START.y }];
+  visited[START.y][START.x] = true;
 
   while (stack.length) {
-    const current = stack[stack.length - 1];
+    const { x, y } = stack[stack.length - 1];
+    const next = shuffle(STEPS, random).find((s) => {
+      const nx = x + s.dx;
+      const ny = y + s.dy;
+      return nx >= 0 && nx < MAZE_COLS && ny >= 0 && ny < MAZE_ROWS && !visited[ny][nx];
+    });
 
-    const candidates = shuffle(DIRECTIONS, random)
-      .map((direction) => ({
-        row: current.row + direction.dr,
-        col: current.col + direction.dc,
-        wallRow: current.row + direction.wallDr,
-        wallCol: current.col + direction.wallDc,
-      }))
-      .filter(
-        (next) =>
-          next.row > 0 &&
-          next.row < ROWS - 1 &&
-          next.col > 0 &&
-          next.col < COLS - 1 &&
-          grid[next.row][next.col] === "#"
-      );
-
-    if (!candidates.length) {
+    if (!next) {
       stack.pop();
       continue;
     }
 
-    const next = candidates[0];
-
-    grid[next.wallRow][next.wallCol] = " ";
-    grid[next.row][next.col] = " ";
-
-    stack.push({ row: next.row, col: next.col });
+    const nx = x + next.dx;
+    const ny = y + next.dy;
+    cells[y][x][next.wall] = false;
+    cells[ny][nx][next.opposite] = false;
+    visited[ny][nx] = true;
+    stack.push({ x: nx, y: ny });
   }
 
-  // Open the entrance.
-  grid[start.row][start.col] = "S";
-  grid[1][15] = " ";
-
-  // Open four boundary exits. Each is attached to an existing corridor.
-  EXIT_POSITIONS.forEach((exit, index) => {
-    if (exit.row === 3 && exit.col === 0) {
-      grid[exit.row][1] = " ";
-    } else if (exit.col === COLS - 1) {
-      grid[exit.row][COLS - 2] = " ";
-    } else {
-      grid[ROWS - 2][exit.col] = " ";
-    }
-
-    grid[exit.row][exit.col] = EXIT_LETTERS[index];
-  });
-
-  // Add a small number of loops by opening walls between existing corridors.
-  // Loops provide alternative routes instead of a single forced path.
-  const loopCandidates = [];
-
-  for (let row = 1; row < ROWS - 1; row += 1) {
-    for (let col = 1; col < COLS - 1; col += 1) {
-      if (grid[row][col] !== "#") continue;
-
-      const horizontal =
-        col % 2 === 0 &&
-        row % 2 === 1 &&
-        grid[row][col - 1] === " " &&
-        grid[row][col + 1] === " ";
-
-      const vertical =
-        row % 2 === 0 &&
-        col % 2 === 1 &&
-        grid[row - 1][col] === " " &&
-        grid[row + 1][col] === " ";
-
-      if (horizontal || vertical) {
-        loopCandidates.push({ row, col });
-      }
+  // A few loops, so one wrong turn early doesn't cost the whole route
+  const inner = [];
+  for (let y = 0; y < MAZE_ROWS; y += 1) {
+    for (let x = 0; x < MAZE_COLS; x += 1) {
+      if (x < MAZE_COLS - 1 && cells[y][x].right) inner.push({ x, y, step: STEPS[1] });
+      if (y < MAZE_ROWS - 1 && cells[y][x].bottom) inner.push({ x, y, step: STEPS[2] });
     }
   }
-
-  shuffle(loopCandidates, random)
-    .slice(0, Math.floor(loopCandidates.length * 0.12))
-    .forEach(({ row, col }) => {
-      grid[row][col] = " ";
+  shuffle(inner, random)
+    .slice(0, Math.floor(inner.length * LOOP_SHARE))
+    .forEach(({ x, y, step }) => {
+      cells[y][x][step.wall] = false;
+      cells[y + step.dy][x + step.dx][step.opposite] = false;
     });
 
-  const exits = Object.fromEntries(
-    EXIT_LETTERS.map((letter, index) => [
-      letter,
-      EXIT_POSITIONS[index],
-    ])
-  );
+  // Gates in the outer wall
+  cells[START.y][START.x][START.side] = false;
+  EXIT_POSITIONS.forEach((exit) => {
+    cells[exit.y][exit.x][exit.side] = false;
+  });
 
-  const maze = {
+  return {
     id: seed,
-    rows: grid.map((row) => row.join("")),
-    start,
-    exits,
-    rowsCount: ROWS,
-    colsCount: COLS,
+    cols: MAZE_COLS,
+    rows: MAZE_ROWS,
+    cells,
+    start: { x: START.x, y: START.y },
+    exits: Object.fromEntries(
+      EXIT_LETTERS.map((letter, i) => [letter, { x: EXIT_POSITIONS[i].x, y: EXIT_POSITIONS[i].y }])
+    ),
   };
-
-  if (!validateMazeMap(maze)) {
-    throw new Error(`Generated maze ${seed} has an unreachable exit.`);
-  }
-
-  return maze;
 }
 
 export const LOGIC_MAZE_MAPS = Array.from(
@@ -160,43 +124,31 @@ export const LOGIC_MAZE_MAPS = Array.from(
   (_, index) => generateMaze(7103 + index * 137)
 );
 
+// Every cell is reachable in a depth-first maze, so every exit is too.
+// Kept as a check in case the generator is ever changed.
 export function validateMazeMap(maze) {
-  const grid = maze.rows.map((row) => row.split(""));
-  const rowCount = grid.length;
-  const colCount = grid[0]?.length ?? 0;
-
-  const isWalkable = (row, col) =>
-    row >= 0 &&
-    row < rowCount &&
-    col >= 0 &&
-    col < colCount &&
-    grid[row][col] !== "#";
-
+  const seen = new Set([`${maze.start.x},${maze.start.y}`]);
   const queue = [maze.start];
-  const seen = new Set([`${maze.start.row},${maze.start.col}`]);
 
   for (let i = 0; i < queue.length; i += 1) {
-    const { row, col } = queue[i];
-
-    for (const [dr, dc] of [
-      [-1, 0],
-      [1, 0],
-      [0, -1],
-      [0, 1],
-    ]) {
-      const nextRow = row + dr;
-      const nextCol = col + dc;
-      const key = `${nextRow},${nextCol}`;
-
-      if (isWalkable(nextRow, nextCol) && !seen.has(key)) {
+    const { x, y } = queue[i];
+    for (const s of STEPS) {
+      const nx = x + s.dx;
+      const ny = y + s.dy;
+      const key = `${nx},${ny}`;
+      if (
+        !maze.cells[y][x][s.wall] &&
+        nx >= 0 && nx < maze.cols && ny >= 0 && ny < maze.rows &&
+        !seen.has(key)
+      ) {
         seen.add(key);
-        queue.push({ row: nextRow, col: nextCol });
+        queue.push({ x: nx, y: ny });
       }
     }
   }
 
   return EXIT_LETTERS.every((letter) => {
     const exit = maze.exits[letter];
-    return seen.has(`${exit.row},${exit.col}`);
+    return seen.has(`${exit.x},${exit.y}`);
   });
 }

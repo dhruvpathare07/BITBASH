@@ -159,7 +159,9 @@
 
 .logic-maze-page .lm-timer b {
   font-family: var(--font-code);
-  font-size: 22px;
+  font-size: 30px;
+  color: #45efff;
+  text-shadow: 0 0 18px rgba(69, 239, 255, 0.6);
   font-weight: 700;
   letter-spacing: 0.04em;
   font-variant-numeric: tabular-nums;
@@ -171,7 +173,10 @@
   border-color: rgba(255, 84, 112, 0.6);
   animation: bb-pulse-red 1s ease-in-out infinite;
 }
-.logic-maze-page .lm-timer.critical b { color: #ff8fa3; }
+.logic-maze-page .lm-timer.critical b {
+  color: #ff536e;
+  text-shadow: 0 0 22px rgba(255, 0, 40, 0.8);
+}
 
 /* ---------- Main layout ---------- */
 .logic-maze-page .lm-layout {
@@ -575,8 +580,11 @@
 
 .logic-maze-success-card h2 {
   margin: 0 0 8px;
-  font-size: 28px;
-  font-weight: 700;
+  font-size: 34px;
+  font-weight: 900;
+  letter-spacing: 3px;
+  color: #42ffba;
+  text-shadow: 0 0 20px rgba(66, 255, 186, 0.5);
 }
 
 .logic-maze-success-card p {
@@ -602,6 +610,110 @@
 .logic-maze-success-card .lm-btn:hover {
   filter: brightness(1.1);
   transform: translateY(-2px);
+}
+
+/* ---------- Last-minute red edges ---------- */
+.lm-edge-warning {
+  position: fixed;
+  inset: 0;
+  z-index: 900;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+}
+.lm-edge-warning.active {
+  visibility: visible;
+  animation: lmEdgePulse 0.8s ease-in-out infinite alternate;
+}
+.lm-edge-warning::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(90deg, rgba(255, 0, 35, 0.42), rgba(255, 0, 35, 0.16) 7%,
+      transparent 25%, transparent 75%, rgba(255, 0, 35, 0.16) 93%, rgba(255, 0, 35, 0.42)),
+    linear-gradient(180deg, rgba(255, 0, 35, 0.42), rgba(255, 0, 35, 0.16) 7%,
+      transparent 25%, transparent 75%, rgba(255, 0, 35, 0.16) 93%, rgba(255, 0, 35, 0.42));
+  filter: blur(18px);
+}
+@keyframes lmEdgePulse {
+  from { opacity: 0.35; }
+  to { opacity: 1; }
+}
+
+/* ---------- Time's up ---------- */
+.lm-timeup-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(2, 5, 15, 0.82);
+  backdrop-filter: blur(9px);
+}
+.lm-timeup-box {
+  width: min(420px, 90%);
+  padding: 45px 25px 34px;
+  text-align: center;
+  background: #0d1730;
+  border: 1px solid #ff3158;
+  border-radius: 12px;
+  box-shadow: 0 0 40px rgba(255, 0, 45, 0.25);
+  animation: lmPopupIn 0.3s ease-out;
+}
+.lm-timeup-box h2 {
+  margin: 0;
+  color: #ff536e;
+  font-size: 42px;
+  font-weight: 900;
+  letter-spacing: 3px;
+  text-shadow: 0 0 20px rgba(255, 0, 45, 0.5);
+}
+.lm-timeup-box h3 {
+  margin: 14px 0 0;
+  color: #ff183d;
+  font-size: 25px;
+  font-weight: 900;
+  letter-spacing: 5px;
+  text-shadow: 0 0 10px rgba(255, 24, 61, 0.8), 0 0 25px rgba(255, 24, 61, 0.5);
+  animation: lmGameOverPulse 1s ease-in-out infinite alternate;
+}
+.lm-timeup-box p {
+  margin: 18px 0 0;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+@keyframes lmGameOverPulse {
+  from { opacity: 0.65; transform: scale(0.98); }
+  to { opacity: 1; transform: scale(1.04); }
+}
+@keyframes lmPopupIn {
+  from { opacity: 0; transform: scale(0.88); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.lm-laugh-rain {
+  position: fixed;
+  inset: 0;
+  z-index: 1001;
+  overflow: hidden;
+  pointer-events: none;
+}
+.lm-laugh-rain span {
+  position: absolute;
+  top: -80px;
+  color: #ffe45c;
+  font-weight: 900;
+  white-space: nowrap;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+  animation: lmLaughFall linear forwards;
+}
+@keyframes lmLaughFall {
+  0% { transform: translateY(-80px) rotate(-15deg); opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { transform: translateY(110vh) rotate(25deg); opacity: 0; }
 }
 
 /* ---------- Missing data fallback ---------- */

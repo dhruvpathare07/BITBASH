@@ -13,6 +13,9 @@ import "./LogicMaze.css";
 const LETTERS = ["A", "B", "C", "D"];
 const AVATARS = ["🐶", "🐱", "🦊", "🐼", "🐸", "🐯", "😄", "😎", "🤓", "🥳", "😈", "🤩"];
 const ROUND_SECONDS = 30 * 60;
+const WARNING_SECONDS = 60;     // red edges pulse during the last minute
+const TIME_UP_SHOW_MS = 4000;   // how long "TIME'S UP" stays before the results
+const LAUGHS = ["😂", "🤣", "😆", "LOL", "HAHAHA", "LMAO"];
 
 export default function LogicMaze() {
   const navigate = useNavigate();
@@ -56,6 +59,7 @@ export default function LogicMaze() {
   const questionStartedAtRef = useRef(Date.now());
 const questionResultsRef = useRef([]);
 const resultsSavedRef = useRef(false);
+  const timeUpRef = useRef(null);
 
   const question = questions?.[questionIndex];
   const maze = LOGIC_MAZE_MAPS?.[questionIndex];
@@ -88,6 +92,9 @@ const resultsSavedRef = useRef(false);
     return () => {
       if (transitionRef.current) {
         window.clearTimeout(transitionRef.current);
+      }
+      if (timeUpRef.current) {
+        window.clearTimeout(timeUpRef.current);
       }
     };
   }, []);
@@ -133,7 +140,15 @@ const resultsSavedRef = useRef(false);
     JSON.stringify(finalResult)
   );
 
-  navigate("/round2-results", { replace: true });
+  // Time ran out: show the TIME'S UP screen for a moment first
+  if (status === "time-up") {
+    timeUpRef.current = window.setTimeout(
+      () => navigate("/round2-results", { replace: true }),
+      TIME_UP_SHOW_MS
+    );
+  } else {
+    navigate("/round2-results", { replace: true });
+  }
 }, [
   status,
   profile,
@@ -227,13 +242,21 @@ setView("question");
     );
   }
 
-  const urgency = timeLeft <= 60 ? "critical" : timeLeft <= 120 ? "low" : "";
+  const urgency = timeLeft <= WARNING_SECONDS ? "critical" : timeLeft <= 120 ? "low" : "";
+  const warning = status === "playing" && timeLeft <= WARNING_SECONDS;
   const isLast = questionIndex === questions.length - 1;
   const fileName = language === "c" ? "main.c" : "main.py";
 
   return (
     <main className="logic-maze-page" data-view={view}>
       <div className="lm-grid" aria-hidden="true" />
+
+      {/* Red glow on the screen edges during the last minute, stronger in the last 10 s */}
+      <div
+        className={`lm-edge-warning ${warning ? "active" : ""}`}
+        style={warning && timeLeft <= 10 ? { filter: `brightness(${1 + (10 - timeLeft) * 0.12})` } : undefined}
+        aria-hidden="true"
+      />
 
       {/* ---------- Top bar ---------- */}
       <header className="lm-topbar">
@@ -386,7 +409,7 @@ setView("question");
             aria-labelledby="logic-maze-success-title"
           >
             <div className="logic-maze-confetti" aria-hidden="true">✓</div>
-            <h2 id="logic-maze-success-title">Correct exit</h2>
+            <h2 id="logic-maze-success-title">MAZE CLEARED!</h2>
             <p>That's the right output. You earned 10 marks.</p>
 
             <button
@@ -413,6 +436,55 @@ setView("question");
           </section>
         </div>
       )}
+
+      {/* ---------- Time's up ---------- */}
+      {status === "time-up" && (
+        <>
+          <LaughRain />
+          <div className="lm-timeup-overlay" role="alertdialog" aria-labelledby="lm-timeup-title">
+            <div className="lm-timeup-box">
+              <h2 id="lm-timeup-title">TIME'S UP!</h2>
+              <h3>GAME OVER</h3>
+              <p>Taking you to your results…</p>
+            </div>
+          </div>
+        </>
+      )}
     </main>
+  );
+}
+
+/* Laughing emojis raining down when the time runs out */
+function LaughRain() {
+  const [drops, setDrops] = useState([]);
+
+  useEffect(() => {
+    let id = 0;
+    const timer = window.setInterval(() => {
+      id += 1;
+      const drop = {
+        id,
+        text: LAUGHS[Math.floor(Math.random() * LAUGHS.length)],
+        left: Math.random() * 100,
+        duration: 3 + Math.random() * 3,
+        size: 20 + Math.random() * 22,
+      };
+      // keep the page light: only the most recent drops stay in the DOM
+      setDrops((current) => [...current.slice(-40), drop]);
+    }, 180);
+    return () => window.clearInterval(timer);
+  }, []);
+
+  return (
+    <div className="lm-laugh-rain" aria-hidden="true">
+      {drops.map((d) => (
+        <span
+          key={d.id}
+          style={{ left: `${d.left}vw`, animationDuration: `${d.duration}s`, fontSize: `${d.size}px` }}
+        >
+          {d.text}
+        </span>
+      ))}
+    </div>
   );
 }

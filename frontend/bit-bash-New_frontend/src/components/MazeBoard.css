@@ -22,27 +22,15 @@
   border-radius: 4px;
 }
 
-/* sized so the whole maze fits on screen with the controls */
-.maze-board-svg {
+/* sized so the whole maze fits on screen with the controls; the maze is
+   drawn centred inside whatever size the canvas ends up */
+.maze-board-canvas canvas {
   display: block;
   width: 100%;
-  height: auto;
   /* leaves room for the card heading, controls and the A-D options row */
-  max-height: calc(100vh - 64px - 360px);
-  min-height: 260px;
-}
-
-/* exits breathe gently so they're easy to spot */
-.maze-board-exit {
-  animation: exitPulse 2.4s ease-in-out infinite;
-}
-.maze-board-exit-b { animation-delay: 0.3s; }
-.maze-board-exit-c { animation-delay: 0.6s; }
-.maze-board-exit-d { animation-delay: 0.9s; }
-
-@keyframes exitPulse {
-  0%, 100% { opacity: 1; }
-  50%      { opacity: 0.72; }
+  height: clamp(280px, calc(100vh - 64px - 360px), 640px);
+  border-radius: 6px;
+  box-shadow: 0 0 30px rgba(35, 125, 255, 0.08), inset 0 0 30px rgba(35, 125, 255, 0.04);
 }
 
 /* ---------- Status line ---------- */
@@ -53,8 +41,9 @@
   gap: 10px;
   min-height: 44px;
   padding: 10px 14px;
-  font-size: 15px;
-  color: var(--text-secondary);
+  font-size: 13px;
+  letter-spacing: 0.06em;
+  color: #aab6d7;
   background: var(--r2-panel-sunken);
   border: 1px solid var(--r2-line);
   border-left: 3px solid var(--r2-blue);
@@ -69,6 +58,23 @@
   background: var(--r2-blue);
   box-shadow: 0 0 10px var(--r2-blue);
   animation: dotGlow 1.6s ease-in-out infinite;
+}
+
+.maze-board-status.success {
+  color: #4dffbd;
+  border-left-color: #4dffbd;
+}
+.maze-board-status.success .maze-board-status-dot {
+  background: #4dffbd;
+  box-shadow: 0 0 10px #4dffbd;
+}
+.maze-board-status.error {
+  color: #ff647d;
+  border-left-color: #ff647d;
+}
+.maze-board-status.error .maze-board-status-dot {
+  background: #ff647d;
+  box-shadow: 0 0 10px #ff647d;
 }
 
 @keyframes dotGlow {
