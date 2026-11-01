@@ -4,14 +4,21 @@ import "./Admin.css";
 
 const COLUMNS = [
   { key: "rank", label: "#", sortable: false },
-  { key: "name", label: "Name", sortable: true },
+  { key: "name", label: "Player", sortable: true },
   { key: "className", label: "Class", sortable: true },
   { key: "round1", label: "Round 1", sortable: true, num: true },
+  { key: "q1", label: "Q1", sortable: false, num: true },
+  { key: "q2", label: "Q2", sortable: false, num: true },
+  { key: "q3", label: "Q3", sortable: false, num: true },
   { key: "round2", label: "Round 2", sortable: true, num: true },
   { key: "total", label: "Total", sortable: true, num: true },
   { key: "totalTime", label: "Total Time", sortable: true, num: true },
   { key: "details", label: "", sortable: false },
 ];
+
+// One Round 1 question from the saved breakdown (null if not recorded)
+const questionOf = (r, n) =>
+  (r.round1Details?.questions || []).find((q) => Number(q.question) === n) || null;
 
 const TIME_KEYS = ["totalTime"];
 
@@ -163,6 +170,10 @@ export default function Admin() {
       "R2 Time",
       "Total",
       "Total Time",
+      "Q1 Topic", "Q1 Marks", "Q1 Bugs",
+      "Q2 Topic", "Q2 Marks", "Q2 Bugs",
+      "Q3 Topic", "Q3 Marks", "Q3 Bugs",
+      "R2 Solved",
     ];
     const esc = (v) => `"${String(v ?? "").replace(/"/g, '""')}"`;
     const lines = sortedRows.map((r, i) =>
@@ -178,6 +189,11 @@ export default function Admin() {
         fmtTime(r.round2Time),
         withTotal(r),
         fmtTime(totalTimeOf(r)),
+        ...[1, 2, 3].flatMap((n) => {
+          const q = questionOf(r, n);
+          return [q?.topic ?? "", q?.score ?? "", q?.bugsFixed ?? ""];
+        }),
+        r.round2Details?.solved ?? "",
       ]
         .map(esc)
         .join(",")
@@ -266,11 +282,49 @@ export default function Admin() {
             {group.rows.map((r, i) => (
               <tr key={r.username}>
                 <td className="rank">{i + 1}</td>
-                <td>{r.name || r.username}</td>
+                <td className="player">
+                  <b>{r.name || r.username}</b>
+                  {r.name && <small>@{r.username}</small>}
+                </td>
                 <td>{r.className || "—"}</td>
-                <td className="num">{r.round1 ?? "—"}</td>
-                <td className="num">{r.round2 ?? "—"}</td>
-                <td className="num total">{withTotal(r)}</td>
+                <td className="num">
+                  <b>{r.round1 ?? "—"}</b>
+                  {r.round1 != null && <span className="of">/300</span>}
+                  <small>{fmtTime(r.round1Time) || (r.round1 == null ? "not played" : "no time")}</small>
+                </td>
+                {[1, 2, 3].map((n) => {
+                  const q = questionOf(r, n);
+                  return (
+                    <td className="num q" key={n} title={q?.topic || undefined}>
+                      <b>{q ? q.score : "—"}</b>
+                      {q && (
+                        <small>
+                          {q.topic || "?"}
+                          {q.bugsFixed ? ` · ${q.bugsFixed} bugs` : ""}
+                        </small>
+                      )}
+                    </td>
+                  );
+                })}
+                <td className="num">
+                  <b>{r.round2 ?? "—"}</b>
+                  {r.round2 != null && <span className="of">/100</span>}
+                  <small>
+                    {r.round2 == null
+                      ? "not played"
+                      : [
+                          r.round2Details?.solved != null &&
+                            `${r.round2Details.solved}/${r.round2Details.totalChallenges || 10} solved`,
+                          fmtTime(r.round2Time),
+                        ]
+                          .filter(Boolean)
+                          .join(" · ") || "no time"}
+                  </small>
+                </td>
+                <td className="num total">
+                  {withTotal(r)}
+                  <span className="of">/400</span>
+                </td>
                 <td className="num time" title={totalTimeOf(r) == null ? "No time recorded" : undefined}>
                   {fmtTime(totalTimeOf(r)) || "—"}
                 </td>
