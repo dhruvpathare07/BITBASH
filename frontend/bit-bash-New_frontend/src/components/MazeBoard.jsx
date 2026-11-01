@@ -79,7 +79,7 @@ export default function MazeBoard({ maze, question, onEndpoint, disabled = false
     canvas.width = Math.floor(rect.width * dpr);
     canvas.height = Math.floor(rect.height * dpr);
 
-    const cell = Math.min((rect.width - 20) / maze.cols, (rect.height - 20) / maze.rows);
+    const cell = Math.min((rect.width - 12) / maze.cols, (rect.height - 12) / maze.rows);
     const geometry = {
       cell,
       offsetX: (rect.width - maze.cols * cell) / 2,
@@ -220,8 +220,47 @@ export default function MazeBoard({ maze, question, onEndpoint, disabled = false
         ctx.restore();
       }
 
-      // Player: soft halo, white core, cyan centre
+      // Arrow from the player towards the nearest exit (straight line, so
+      // it shows the direction, not the route)
       const [px, py] = center(s.renderX, s.renderY);
+      const nearest = exits.reduce((best, e) => {
+        const d = Math.hypot(e.x - s.renderX, e.y - s.renderY);
+        return !best || d < best.d ? { e, d } : best;
+      }, null);
+      if (nearest && nearest.d > 0.5) {
+        const [ex, ey] = center(nearest.e.x, nearest.e.y);
+        const angle = Math.atan2(ey - py, ex - px);
+        const r = g.cell * 0.55;
+        const size = Math.max(10, g.cell * 0.6);
+        ctx.save();
+        ctx.translate(px, py);
+        ctx.rotate(angle);
+        ctx.beginPath();
+        ctx.moveTo(r + size, 0);
+        ctx.lineTo(r, -size * 0.75);
+        ctx.lineTo(r + size * 0.3, 0);
+        ctx.lineTo(r, size * 0.75);
+        ctx.closePath();
+        ctx.fillStyle = COLORS.exit;
+        ctx.shadowColor = COLORS.exit;
+        ctx.shadowBlur = 10;
+        ctx.fill();
+        ctx.restore();
+        // which exit it points at
+        const lx = px + Math.cos(angle) * (r + size * 1.7);
+        const ly = py + Math.sin(angle) * (r + size * 1.7);
+        ctx.save();
+        ctx.font = `bold ${Math.max(12, g.cell * 0.5)}px Arial`;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillStyle = "#ffd6f5";
+        ctx.shadowColor = "#000";
+        ctx.shadowBlur = 4;
+        ctx.fillText(nearest.e.letter, lx, ly);
+        ctx.restore();
+      }
+
+      // Player: soft halo, white core, cyan centre
       ctx.save();
       ctx.shadowColor = COLORS.cyan;
       ctx.beginPath();

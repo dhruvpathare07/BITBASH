@@ -16,7 +16,7 @@
   grid-area: canvas;
   display: flex;
   justify-content: center;
-  padding: 10px;
+  padding: 4px;
   background: var(--r2-panel-sunken);
   border: 1px solid var(--r2-line);
   border-radius: 4px;
@@ -28,7 +28,7 @@
   display: block;
   width: 100%;
   /* leaves room for the card heading, controls and the A-D options row */
-  height: clamp(280px, calc(100vh - 64px - 360px), 640px);
+  height: clamp(300px, calc(100vh - 64px - 350px), 920px);
   border-radius: 6px;
   box-shadow: 0 0 30px rgba(35, 125, 255, 0.08), inset 0 0 30px rgba(35, 125, 255, 0.04);
 }

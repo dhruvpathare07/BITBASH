@@ -2,25 +2,27 @@
 //
 // Each maze is a grid of cells with walls on their four sides, carved by a
 // randomized depth-first search (long winding corridors and real dead
-// ends). Medium difficulty: 19 x 13 cells with a few extra openings so
-// there's more than one route, and the four exits spread over three sides.
+// ends). Hard: 33 x 19 cells, a single route to each exit (no shortcuts),
+// and every exit on the far half of the maze from the entrance.
 
-export const MAZE_COLS = 19;
-export const MAZE_ROWS = 13;
+export const MAZE_COLS = 33;
+export const MAZE_ROWS = 19;
 
 const EXIT_LETTERS = ["A", "B", "C", "D"];
 
-// Players enter on the left; exits sit on the top, right and bottom edges.
-const START = { x: 0, y: 6, side: "left" };
+// Players enter on the left; exits sit on the top, right and bottom edges,
+// all on the far half of the maze.
+const START = { x: 0, y: 9, side: "left" };
 const EXIT_POSITIONS = [
-  { x: 13, y: 0, side: "top" },                         // A
-  { x: MAZE_COLS - 1, y: 3, side: "right" },            // B
-  { x: 8, y: MAZE_ROWS - 1, side: "bottom" },           // C
-  { x: MAZE_COLS - 1, y: MAZE_ROWS - 3, side: "right" }, // D
+  { x: 25, y: 0, side: "top" },                          // A
+  { x: MAZE_COLS - 1, y: 4, side: "right" },             // B
+  { x: 21, y: MAZE_ROWS - 1, side: "bottom" },           // C
+  { x: MAZE_COLS - 1, y: MAZE_ROWS - 4, side: "right" }, // D
 ];
 
 // Share of the remaining inner walls knocked down to add alternate routes
-const LOOP_SHARE = 0.06;
+// (0 = exactly one route to each exit: every wrong turn is a dead end)
+const LOOP_SHARE = 0;
 
 const STEPS = [
   { dx: 0, dy: -1, wall: "top", opposite: "bottom" },
