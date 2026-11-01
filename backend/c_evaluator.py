@@ -269,13 +269,11 @@ C_TOPIC_DIFFICULTY = {
 #     return line.lower()
 
 def normalize_c(line: str) -> str:
-    line = line.lower()
-    # Ignore the prompt text inside input(...): it doesn't change the logic,
-    # and the starting code uses prompts while the reference doesn't.
-    line = re.sub(r"input\(\s*(['\"]).*?\1\s*\)", "input()", line)
-    line = re.sub(r'\s+', '', line)
-    line = re.sub(r'\b[a-z_][a-z0-9_]*\b', 'var', line)
-    return line
+    # Must match normalize() in build_offline_checker.py and normalizeLine()
+    # in src/utils/offlineChecker.js. Only spacing is ignored: names,
+    # keywords and case are kept, so `b = a;` vs `b = temp;` or `print` vs
+    # `printf` count as bugs.
+    return re.sub(r'\s+', '', line)
 
 
 

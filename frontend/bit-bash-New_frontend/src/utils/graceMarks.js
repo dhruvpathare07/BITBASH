@@ -26,7 +26,7 @@ function matchedCorrectLines(topic, code, language) {
   const { lang, hashes } = hashesFor(topic, language);
   if (!hashes) return { matched: new Set(), studentCount: 0, correctCount: 0 };
 
-  const student = linesOf(code).map(normalizeLine);
+  const student = linesOf(code).map((line) => normalizeLine(line, lang));
   const n = student.length;
   const m = hashes.length;
   const same = (j, i) => fingerprint(`${lang}|${topic}|${i}`, student[j]) === hashes[i];
@@ -38,9 +38,9 @@ function matchedCorrectLines(topic, code, language) {
   }
 
   // Longest common subsequence of student lines vs correct lines. Several
-  // alignments can tie (after normalization, `for i in range(n):` and
-  // `for j in range(n):` look the same), so among equal-length ones prefer
-  // the alignment that keeps lines closest to their own position.
+  // alignments can tie (repeated lines such as `else:` or `}`), so among
+  // equal-length ones prefer the alignment that keeps lines closest to
+  // their own position.
   const eq = Array.from({ length: n }, (_, j) => Array.from({ length: m }, (_, i) => same(j, i)));
   const better = (a, b) => (a.count !== b.count ? a.count > b.count : a.pen < b.pen);
   const dp = Array.from({ length: n + 1 }, () =>

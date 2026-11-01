@@ -74,11 +74,14 @@ TEST_CASES = {
 "Prime Number": [
     ("7", "Prime Number"),
     ("9", "Not a Prime Number"),
+    ("1", "Not a Prime Number"),   # the num < 2 branch
 ],
 
 "Number To Words Conversion": [
     ("41", "forty one"),
     ("19", "nineteen"),
+    ("10", "ten"),                 # the < 10 / < 20 boundary
+    ("7", "seven"),
 ],
 
 

@@ -12,14 +12,19 @@
 
 import { OFFLINE_CHECKER_DATA } from "../data/offlineCheckerData";
 
-// Must match normalize() in evaluator.py and build_offline_checker.py
-export function normalizeLine(line) {
-  return line
-    .toLowerCase()
+// Must match normalize() in evaluator.py and normalize_c() in c_evaluator.py.
+// Names, keywords and case count (`a = b` vs `a = next_value` is a bug);
+// spacing doesn't. Python also keeps indentation and ignores quote style.
+export function normalizeLine(line, language = "python") {
+  if (language === "c") return line.replace(/\s+/g, "");
+  const expanded = line.replace(/\t/g, "    ");
+  const indent = expanded.length - expanded.replace(/^ +/, "").length;
+  const body = line
     // ignore the prompt text inside input(...); it doesn't change the logic
     .replace(/input\(\s*(['"]).*?\1\s*\)/g, "input()")
-    .replace(/\s+/g, "")
-    .replace(/\b[a-z_][a-z0-9_]*\b/g, "var");
+    .replace(/"/g, "'")
+    .replace(/\s+/g, "");
+  return `${indent}|${body}`;
 }
 
 const encoder = new TextEncoder();
@@ -79,7 +84,7 @@ export function checkOffline(topic, code, language = "python") {
 
   expected.forEach((hash, i) => {
     const line = student[i];
-    if (line !== undefined && fingerprint(`${lang}|${topic}|${i}`, normalizeLine(line)) === hash) {
+    if (line !== undefined && fingerprint(`${lang}|${topic}|${i}`, normalizeLine(line, lang)) === hash) {
       correct += 1;
     } else {
       wrongLines.push({

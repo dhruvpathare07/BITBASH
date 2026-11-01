@@ -31,7 +31,7 @@ print('Calculating sum of digits...')
 total = 0
 while num > 0:
     digit = num % 10
-    total += digit
+    total = total + digit
     num //= 10
 print('Sum of digits is:', total)
 print('Done!')""",
@@ -61,12 +61,12 @@ print('The largest number is:', largest)""",
     "Armstrong": """num = int(input())
 temp = num
 order = len(str(num))
-total = 0
+sum = 0
 while temp > 0:
     digit = temp % 10
-    total += digit ** order
+    sum = sum + digit ** order
     temp //= 10
-if total == num:
+if sum == num:
     print('Armstrong Number')
 else:
     print('Not an Armstrong Number')""",
@@ -107,7 +107,7 @@ else:
 print('Array:', arr)
 total = 0
 for num in arr:
-    total += num
+    total = total + num
 print('Sum of array elements is:', total)""", 
 
     # ================= HARD =================
@@ -147,10 +147,10 @@ print('Factorial is:', result)""",
 print('Checking if number is prime...')
 is_prime = True
 
-if num <= 1:
+if num < 2:
     is_prime = False
 else:
-    for i in range(2, int(num ** 0.5) + 1):
+    for i in range(2, num):
         if num % i == 0:
             is_prime = False
             break
@@ -199,13 +199,19 @@ TOPIC_DIFFICULTY = {
     "Number To Words Conversion": "hard",
 }
 def normalize(line: str) -> str:
-    line = line.lower()
+    # Must match normalize() in build_offline_checker.py and normalizeLine()
+    # in src/utils/offlineChecker.js.
+    # Names, keywords and case are kept: `a = b` vs `a = next_value` or
+    # `and` vs `or` are real bugs. Indentation is kept too (it changes what
+    # Python runs). Spaces and quote style are ignored.
+    expanded = line.replace("\t", "    ")
+    indent = len(expanded) - len(expanded.lstrip(" "))
     # Ignore the prompt text inside input(...): it doesn't change the logic,
     # and the starting code uses prompts while the reference doesn't.
     line = re.sub(r"input\(\s*(['\"]).*?\1\s*\)", "input()", line)
+    line = line.replace('"', "'")
     line = re.sub(r'\s+', '', line)
-    line = re.sub(r'\b[a-z_][a-z0-9_]*\b', 'var', line)
-    return line
+    return f"{indent}|{line}"
 
 def calculate_line_progress(user_code, correct_code):
     user = [l.strip() for l in user_code.splitlines() if l.strip()]
@@ -219,11 +225,37 @@ def calculate_line_progress(user_code, correct_code):
     return round((matched / len(correct)) * 100) if correct else 0
 
 
+PROMPT_RE = re.compile(r"input\(\s*(['\"]).*?\1\s*\)")
+_reference_output = {}  # (topic, input) -> output lines of the correct code
+
+
+def _output_lines(output):
+    return [" ".join(line.split()) for line in output.strip().splitlines() if line.strip()]
+
+
 def run_test_cases(topic, code):
+    """Logic check: for every test input the player's program must print
+    exactly what the correct program prints. Prompt text inside input(...)
+    is ignored, like in the line check. (Matching only a phrase let wrong
+    programs through: 'Palindrome Number' is inside 'Not a Palindrome
+    Number', and Array Reverse only looked for the words 'Reversed Array'.)"""
     cases = TEST_CASES.get(topic, [])
-    for inp, expected in cases:
+    reference = CORRECT_CODE.get(topic)
+    if not cases or not reference:
+        return False
+
+    code = PROMPT_RE.sub("input()", code)
+    for inp, _ in cases:
+        key = (topic, inp)
+        if key not in _reference_output:
+            ref_out, ref_err = run_code(reference, inp)
+            _reference_output[key] = None if ref_err else _output_lines(ref_out)
+        expected = _reference_output[key]
+        if expected is None:
+            return False  # couldn't run the reference; leave it to the line check
+
         output, error = run_code(code, inp)
-        if error or expected.lower() not in output.lower():
+        if error or _output_lines(output) != expected:
             return False
     return True
 

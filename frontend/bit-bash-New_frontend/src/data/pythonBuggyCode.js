@@ -40,7 +40,7 @@ print('Calculating factorial...')
 fact = 1
 for i in range(1, num):
     fact = fact + i
-print('Factorial of', num, 'is', fact)
+print('Factorial of', num, 'is:', fact)
 print('Program Finished')
 `,
 
@@ -55,7 +55,7 @@ elif b > a and b > c:
     largest == b
 else:
     largest = c
-print('The largest number is', largest)
+print('The largest number is:', largest)
 `,
 
 /* ================= MEDIUM ================= */
@@ -89,6 +89,7 @@ for i in range(n)
 
   "Array Reverse": `
 arr = list(map(int, input('Enter array elements: ').split()))
+print('Original Array:', arr)
 left = 0
 right = len(arr)
 while left < right:
@@ -114,10 +115,11 @@ else
 
   "Sum Of Array Elements": `
 arr = list(map(int, input('Enter array elements: ').split()))
+print('Array:', arr)
 total = 0
 for num in arr
     total = total + num
-print('Sum of array elements:', total)
+print('Sum of array elements is:', total)
 `, 
 
 /* ================= HARD ================= */

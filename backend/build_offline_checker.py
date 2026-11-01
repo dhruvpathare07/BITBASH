@@ -22,23 +22,18 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 
 from evaluator import CORRECT_CODE  # noqa: E402
-from c_evaluator import C_CORRECT_CODE  # noqa: E402
+from c_evaluator import C_CORRECT_CODE, normalize_c  # noqa: E402
+from evaluator import normalize as normalize_py  # noqa: E402
 
 OUT = os.path.join(
     HERE, "..", "frontend", "bit-bash-New_frontend", "src", "data", "offlineCheckerData.js"
 )
 
 
-def normalize(line: str) -> str:
-    # Must match normalize() in evaluator.py / normalize_c() in c_evaluator.py
-    # and normalizeLine() in src/utils/offlineChecker.js.
-    line = line.lower()
-    # Ignore the prompt text inside input(...): it doesn't change the logic,
-    # and the starting code uses prompts while the reference doesn't.
-    line = re.sub(r"input\(\s*(['\"]).*?\1\s*\)", "input()", line)
-    line = re.sub(r"\s+", "", line)
-    line = re.sub(r"\b[a-z_][a-z0-9_]*\b", "var", line)
-    return line
+def normalize(line: str, language: str) -> str:
+    # The checkers' own normalize functions, so all three always agree
+    # (and normalizeLine() in src/utils/offlineChecker.js mirrors them).
+    return normalize_c(line) if language == "c" else normalize_py(line)
 
 
 def fnv1a(data: bytes, seed: int) -> int:
@@ -64,7 +59,7 @@ def build(refs: dict, language: str) -> dict:
     out = {}
     for topic, code in refs.items():
         out[topic] = [
-            fingerprint(f"{language}|{topic}|{i}", normalize(line))
+            fingerprint(f"{language}|{topic}|{i}", normalize(line, language))
             for i, line in enumerate(lines_of(code))
         ]
     return out
