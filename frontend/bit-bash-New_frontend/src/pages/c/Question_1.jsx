@@ -11,6 +11,7 @@ import { useEffect } from "react";
 import "../question.css";
 import { C_EXPECTED_OUTPUT } from "../../data/cExpectedOutput";
 import { initProgress, getProgress, completeQuestion } from "../../utils/progress";
+import { getStage, setStage } from "../../utils/questionStage";
 
 // Round 1: flat marks for each correctly debugged question (3 questions = 30 marks)
 const ASSEMBLY_POINTS = 50; // 1st sub-question: assemble the code
@@ -89,16 +90,23 @@ export default function Question_1() {
 
   const handleTopicSelect = (topic) => {
     setSelectedTopic(topic);
-    setPhase("topic");
+    // after a refresh, carry on where the player was (same clock)
+    const stage = getStage("c-q1");
+    if (stage === "debug") setAssemblyCompleted(true);
+    setPhase(stage || "topic");
   };
 
   const startAssembly = () => {
     setAssemblyCompleted(false);
     setPhase("assembly");
+    setStage("c-q1", "assembly");
   };
 
   const unlockDebug = () => {
     setAssemblyCompleted(true);
+    setStage("c-q1", "debug");
+    // straight on to debugging after a short "assembled" moment
+    setTimeout(() => setPhase((p) => (p === "assembly" ? "debug" : p)), 1200);
   };
 
   const onTimeUp = () => {
@@ -148,6 +156,7 @@ export default function Question_1() {
         {(phase === "assembly" || phase === "debug") && !isGameOver && (
           <Timer
             ref={timerRef}
+            storageKey="c-q1"
             onTimeUp={onTimeUp}
             getTimeLeft={setCurrentTimeLeft}
           />

@@ -7,26 +7,29 @@ import {
   useImperativeHandle
 } from "react";
 import "./Timer.css";
+import { QUESTION_SECONDS, questionDeadline } from "../utils/questionStage";
 
-const Timer = forwardRef(({ onTimeUp, getTimeLeft }, ref) => {
-  const [time, setTime] = useState(600);
+// With a storageKey the clock counts down to a deadline saved for the
+// session, so refreshing the page doesn't give the 10 minutes back.
+const Timer = forwardRef(({ onTimeUp, getTimeLeft, storageKey }, ref) => {
+  const [deadline] = useState(() =>
+    storageKey ? questionDeadline(storageKey) : Date.now() + QUESTION_SECONDS * 1000
+  );
+  const secondsLeft = () => Math.max(0, Math.ceil((deadline - Date.now()) / 1000));
+  const [time, setTime] = useState(secondsLeft);
   const intervalRef = useRef(null);
   const hasFiredRef = useRef(false);
 
   // 🔥 START TIMER
   useEffect(() => {
     intervalRef.current = setInterval(() => {
-      setTime(prev => {
-        if (prev <= 1) {
-          clearInterval(intervalRef.current);
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
+      const left = Math.max(0, Math.ceil((deadline - Date.now()) / 1000));
+      setTime(left);
+      if (left === 0) clearInterval(intervalRef.current);
+    }, 250);
 
     return () => clearInterval(intervalRef.current);
-  }, []);
+  }, [deadline]);
 
   // 🔥 TIME UP HANDLING (warning colours are classes below)
   useEffect(() => {

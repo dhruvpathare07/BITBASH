@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import "./PlayerEntry.css";
+import { clearQuestionState } from "../utils/questionStage";
 import { clearRound2Order } from "../utils/shuffleRound2";
 
 const avatars = [
@@ -67,10 +68,8 @@ export default function PlayerEntry() {
     sessionStorage.removeItem("bbbProgress");
     sessionStorage.removeItem("bbbResults");
     sessionStorage.removeItem("round1ResultsSeen");
-    // a new player draws their own Round 1 topics
-    Object.keys(sessionStorage)
-      .filter((key) => key.startsWith("bbbDraw:"))
-      .forEach((key) => sessionStorage.removeItem(key));
+    // a new player draws their own Round 1 topics, with fresh clocks
+    clearQuestionState();
     clearRound2Order(); // new player -> new Round 2 question/option order
 
     // Navigate to correct language folder

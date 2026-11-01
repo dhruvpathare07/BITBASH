@@ -10,6 +10,7 @@ import { useNavigate } from "react-router-dom";
 import { PYTHON_EXPECTED_OUTPUT } from "../data/pythonExpectedOutput";
 import "./question.css";
 import { initProgress, getProgress, completeQuestion } from "../utils/progress";
+import { getStage, setStage } from "../utils/questionStage";
 import { useRef } from "react";
 
 
@@ -186,17 +187,24 @@ useEffect(() => {
   // GAME FLOW
   const handleTopicSelect = (topic) => {
     setSelectedTopic(topic);
-    setPhase("topic");
+    // after a refresh, carry on where the player was (same clock)
+    const stage = getStage("python-q2");
+    if (stage === "debug") setAssemblyCompleted(true);
+    setPhase(stage || "topic");
   };
 
   const startAssembly = () => {
     setAssemblyCompleted(false);
     setPhase("assembly");
+    setStage("python-q2", "assembly");
   };
 
   const unlockDebug = () => {
-  setAssemblyCompleted(true);
-};
+    setAssemblyCompleted(true);
+    setStage("python-q2", "debug");
+    // straight on to debugging after a short "assembled" moment
+    setTimeout(() => setPhase((p) => (p === "assembly" ? "debug" : p)), 1200);
+  };
 
   /*const handleDebugSuccess = () => {
   updateScore(100);
@@ -272,6 +280,7 @@ if (isLocked) {
         {(phase === "assembly" || phase === "debug") && !isGameOver && (
           <Timer
   ref={timerRef}
+  storageKey="python-q2"
   onTimeUp={() => {
     timerRef.current?.stop();
     onTimeUp(); // ✅ call the real logic

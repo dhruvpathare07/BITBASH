@@ -9,6 +9,7 @@ import DebugSection from "../components/DebugSection";
 import { useNavigate } from "react-router-dom";
 import { PYTHON_EXPECTED_OUTPUT } from "../data/pythonExpectedOutput";
 import { initProgress, getProgress, completeQuestion } from "../utils/progress";
+import { getStage, setStage } from "../utils/questionStage";
 import { useRef } from "react";
 import "./question.css";
 
@@ -170,17 +171,24 @@ sessionStorage.setItem("bbbResults", JSON.stringify(allResults));
   /* GAME FLOW */
   const handleTopicSelect = (topic) => {
     setSelectedTopic(topic);
-    setPhase("topic");
+    // after a refresh, carry on where the player was (same clock)
+    const stage = getStage("python-q3");
+    if (stage === "debug") setAssemblyCompleted(true);
+    setPhase(stage || "topic");
   };
 
   const startAssembly = () => {
     setAssemblyCompleted(false);
     setPhase("assembly");
+    setStage("python-q3", "assembly");
   };
 
   const unlockDebug = () => {
-  setAssemblyCompleted(true);
-};
+    setAssemblyCompleted(true);
+    setStage("python-q3", "debug");
+    // straight on to debugging after a short "assembled" moment
+    setTimeout(() => setPhase((p) => (p === "assembly" ? "debug" : p)), 1200);
+  };
 
 
 //   const handleDebugFail = () => {
@@ -279,6 +287,7 @@ if (isLocked) {
         {(phase === "assembly" || phase === "debug") && !isGameOver && (
           <Timer
   ref={timerRef}
+  storageKey="python-q3"
   onTimeUp={() => {
     timerRef.current?.stop();
     handleTimeUp();

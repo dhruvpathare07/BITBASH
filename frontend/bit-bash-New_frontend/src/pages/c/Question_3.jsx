@@ -9,6 +9,7 @@ import DebugSection from "../../components/DebugSection";
 import { useNavigate } from "react-router-dom";
 import { C_EXPECTED_OUTPUT } from "../../data/cExpectedOutput";
 import { initProgress, getProgress, completeQuestion } from "../../utils/progress";
+import { getStage, setStage } from "../../utils/questionStage";
 import "../question.css";
 
 // Round 1: flat marks for each correctly debugged question (3 questions = 30 marks)
@@ -100,16 +101,23 @@ export default function Question_3() {
 
   const handleTopicSelect = (topic) => {
     setSelectedTopic(topic);
-    setPhase("topic");
+    // after a refresh, carry on where the player was (same clock)
+    const stage = getStage("c-q3");
+    if (stage === "debug") setAssemblyCompleted(true);
+    setPhase(stage || "topic");
   };
 
   const startAssembly = () => {
     setAssemblyCompleted(false);
     setPhase("assembly");
+    setStage("c-q3", "assembly");
   };
 
   const unlockDebug = () => {
     setAssemblyCompleted(true);
+    setStage("c-q3", "debug");
+    // straight on to debugging after a short "assembled" moment
+    setTimeout(() => setPhase((p) => (p === "assembly" ? "debug" : p)), 1200);
   };
 
   const onTimeUp = () => {
@@ -150,6 +158,7 @@ export default function Question_3() {
         {(phase === "assembly" || phase === "debug") && !isGameOver && (
           <Timer
             ref={timerRef}
+            storageKey="c-q3"
             onTimeUp={onTimeUp}
             getTimeLeft={setCurrentTimeLeft}
           />
