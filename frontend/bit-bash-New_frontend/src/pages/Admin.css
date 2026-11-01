@@ -14,17 +14,17 @@
 /* ---- Passkey gate ---- */
 .admin-gate {
   margin: auto;
-  width: min(360px, 90vw);
+  width: min(520px, 92vw);
   background: var(--bg-card);
   border: 1px solid var(--border-color);
-  border-radius: 16px;
-  padding: 34px 28px;
+  border-radius: 18px;
+  padding: 48px 40px;
   text-align: center;
   box-shadow: 0 0 40px rgba(124, 92, 255, 0.18);
 }
 
 .admin-title {
-  font-size: 1.8rem;
+  font-size: 2.4rem;
   font-weight: 800;
   background: var(--grad-neon);
   -webkit-background-clip: text;
@@ -34,18 +34,18 @@
 
 .admin-sub {
   color: var(--text-secondary);
-  font-size: 0.9rem;
-  margin: 8px 0 18px;
+  font-size: 1.05rem;
+  margin: 10px 0 22px;
 }
 
 .admin-input {
   width: 100%;
-  padding: 12px 14px;
+  padding: 16px 18px;
   border-radius: 10px;
   border: 1px solid var(--border-color);
   background: var(--bg-main);
   color: var(--text-primary);
-  font-size: 1rem;
+  font-size: 1.15rem;
   outline: none;
   margin-bottom: 14px;
 }
@@ -67,7 +67,8 @@
 }
 .admin-btn {
   width: 100%;
-  font-size: 1rem;
+  padding: 15px 18px;
+  font-size: 1.1rem;
 }
 .admin-btn:hover,
 .admin-refresh:hover {
@@ -86,7 +87,7 @@
 
 /* ---- Results table ---- */
 .admin-content {
-  width: min(840px, 100%);
+  width: min(1400px, 100%);
 }
 
 .admin-head {
@@ -96,34 +97,34 @@
   gap: 12px;
 }
 .admin-refresh {
-  font-size: 0.85rem;
-  padding: 9px 14px;
+  font-size: 1rem;
+  padding: 12px 20px;
 }
 
 .admin-table-wrap {
   margin-top: 18px;
   overflow-x: auto;
   border: 1px solid var(--border-color);
-  border-radius: 14px;
+  border-radius: 16px;
   background: var(--bg-card);
 }
 
 .admin-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.95rem;
+  font-size: 1.12rem;
 }
 
 .admin-table th,
 .admin-table td {
-  padding: 13px 16px;
+  padding: 18px 22px;
   text-align: left;
   border-bottom: 1px solid rgba(124, 92, 255, 0.12);
 }
 
 .admin-table thead th {
   color: var(--primary-glow);
-  font-size: 0.78rem;
+  font-size: 0.85rem;
   letter-spacing: 0.06em;
   text-transform: uppercase;
 }
@@ -188,7 +189,7 @@
 .admin-group-title {
   margin: 0;
   padding-left: 12px;
-  font-size: 22px;
+  font-size: 28px;
   font-weight: 700;
   color: var(--text-primary);
   border-left: 3px solid var(--line-strong);
@@ -197,7 +198,7 @@
 .admin-group-title.lang-c { border-left-color: var(--primary-purple); }
 
 .admin-group-count {
-  font-size: 14px;
+  font-size: 16px;
   color: var(--text-secondary);
 }
 
@@ -218,8 +219,8 @@
 
 .admin-notice {
   margin-top: 16px;
-  padding: 10px 14px;
-  font-size: 15px;
+  padding: 14px 18px;
+  font-size: 17px;
   color: var(--success-green);
   background: rgba(62, 240, 176, 0.08);
   border: 1px solid rgba(62, 240, 176, 0.35);
@@ -240,8 +241,8 @@
 }
 
 .admin-modal {
-  width: min(460px, 100%);
-  padding: 28px;
+  width: min(600px, 100%);
+  padding: 36px;
   font-family: var(--font-ui);
   color: var(--text-primary);
   background: var(--panel);
@@ -253,14 +254,14 @@
 }
 
 .admin-modal h2 {
-  margin: 0 0 10px;
-  font-size: 24px;
+  margin: 0 0 12px;
+  font-size: 28px;
   font-weight: 700;
 }
 
 .admin-modal p {
   margin: 0 0 12px;
-  font-size: 15px;
+  font-size: 17px;
   line-height: 1.55;
   color: var(--text-secondary);
 }
@@ -341,8 +342,8 @@
 
 /* Details button in each row */
 .admin-details-btn {
-  padding: 5px 12px;
-  font-size: 13px;
+  padding: 9px 18px;
+  font-size: 15px;
   font-weight: 600;
   color: var(--text-primary);
   background: var(--panel-raised);
@@ -358,7 +359,7 @@
 
 /* Player details popup */
 .admin-modal.admin-details {
-  width: min(720px, 100%);
+  width: min(1000px, 100%);
   max-height: calc(100vh - 48px);
   overflow-y: auto;
   border-top-color: var(--accent-pink);
@@ -382,33 +383,33 @@
   display: flex;
   flex-direction: column;
   gap: 2px;
-  padding: 12px 14px;
+  padding: 18px 22px;
   background: var(--panel-sunken);
   border: 1px solid var(--line);
   border-radius: 4px;
 }
-.admin-details-totals span { font-size: 13px; color: var(--text-secondary); }
-.admin-details-totals b { font-size: 26px; font-variant-numeric: tabular-nums; }
-.admin-details-totals small { font-size: 14px; color: var(--text-faint); font-weight: 500; }
+.admin-details-totals span { font-size: 15px; color: var(--text-secondary); }
+.admin-details-totals b { font-size: 34px; font-variant-numeric: tabular-nums; }
+.admin-details-totals small { font-size: 16px; color: var(--text-faint); font-weight: 500; }
 .admin-details-round { margin-top: 14px; }
 .admin-details-round h3 {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
   gap: 10px;
-  margin: 0 0 8px;
-  font-size: 17px;
+  margin: 0 0 10px;
+  font-size: 21px;
 }
 .admin-details-round h3 span {
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 500;
   color: var(--text-secondary);
   font-variant-numeric: tabular-nums;
 }
-.admin-details-meta { font-size: 14px; margin: 0 0 8px !important; }
-.admin-details-empty { font-size: 14px; color: var(--text-faint) !important; }
+.admin-details-meta { font-size: 16px; margin: 0 0 8px !important; }
+.admin-details-empty { font-size: 16px; color: var(--text-faint) !important; }
 .admin-table.admin-mini th,
 .admin-table.admin-mini td {
-  padding: 8px 12px;
-  font-size: 14px;
+  padding: 12px 16px;
+  font-size: 16px;
 }
