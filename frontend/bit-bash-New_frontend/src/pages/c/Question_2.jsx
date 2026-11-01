@@ -181,6 +181,7 @@ export default function Question_2() {
             <TopicSwiper
               topics={MEDIUM_TOPICS}
               onSelect={handleTopicSelect}
+              drawKey="c-q2"
             />
           )}
 

@@ -9,7 +9,7 @@ import { checkOffline } from "../utils/offlineChecker";
 import { findBugs, countFixedBugs, graceMarks } from "../utils/graceMarks";
 
 const INDENT = "    ";
-const SERVER_TIMEOUT_MS = 6000;
+const SERVER_TIMEOUT_MS = 4000; // then the in-browser check takes over
 
 // Ask the server first; if it can't be reached (network cut, server down,
 // overloaded), check in the browser instead so the game keeps going.
@@ -117,11 +117,29 @@ export default function DebugSection({
     onGraceChange?.({ fixed: best, total: bugs.total, marks: graceMarks(best, bugs.total, debugPoints) });
   };
 
+  // Solved: bank full marks and go straight to the "Well done" screen
+  const markSolved = () => {
+    setAllFixed(true);
+    setProgress(100);
+    onScoreChange?.(100);
+    recordFixed(bugs.total);
+    setShowFixedModal(true);
+  };
+
   const handleCheck = async () => {
     const nextAttempts = attempts + 1;
     setAttempts(nextAttempts);
-    setLoading(true);
 
+    // Every original bug fixed: that's solved, whatever else changed (new
+    // mistakes never cost marks). Answer instantly, no server round trip,
+    // so the meter and the result can never disagree.
+    if (hasGrace && countFixedBugs(topic, code, language, bugs) === bugs.total) {
+      setResult({ success: true, message: `All ${bugs.total} bug${bugs.total === 1 ? "" : "s"} fixed!` });
+      markSolved();
+      return;
+    }
+
+    setLoading(true);
     try {
       const data = await evaluateFix({
         topic,
@@ -135,11 +153,9 @@ export default function DebugSection({
       setProgress(newProgress);
       onScoreChange?.(newProgress);
 
-      const solved = data.finalStatus === "SUCCESS";
-      if (solved) {
-        setAllFixed(true);
-      }
-      recordFixed(solved ? bugs.total : countFixedBugs(topic, code, language, bugs));
+      // The server also accepts a different but correct fix (it runs the code)
+      if (data.finalStatus === "SUCCESS") markSolved();
+      else recordFixed(countFixedBugs(topic, code, language, bugs));
     } catch {
       setResult({ success: false, message: "Something went wrong while checking. Try again." });
     }

@@ -309,6 +309,7 @@ if (isLocked) {
             <TopicSwiper
   topics={MEDIUM_TOPICS}
   onSelect={handleTopicSelect}
+  drawKey="python-q2"
 />
           )}
 

@@ -67,6 +67,10 @@ export default function PlayerEntry() {
     sessionStorage.removeItem("bbbProgress");
     sessionStorage.removeItem("bbbResults");
     sessionStorage.removeItem("round1ResultsSeen");
+    // a new player draws their own Round 1 topics
+    Object.keys(sessionStorage)
+      .filter((key) => key.startsWith("bbbDraw:"))
+      .forEach((key) => sessionStorage.removeItem(key));
     clearRound2Order(); // new player -> new Round 2 question/option order
 
     // Navigate to correct language folder

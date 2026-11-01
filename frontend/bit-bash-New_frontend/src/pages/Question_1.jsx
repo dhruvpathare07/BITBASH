@@ -341,6 +341,7 @@ if (isLocked) {
             <TopicSwiper
   topics={EASY_TOPICS}
   onSelect={handleTopicSelect}
+  drawKey="python-q1"
 />
           )}
 

@@ -180,6 +180,7 @@ export default function Question_1() {
             <TopicSwiper
               topics={EASY_TOPICS}
               onSelect={handleTopicSelect}
+              drawKey="c-q1"
             />
           )}
 

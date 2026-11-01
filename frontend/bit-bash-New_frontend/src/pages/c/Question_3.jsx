@@ -181,6 +181,7 @@ export default function Question_3() {
             <TopicSwiper
               topics={HARD_TOPICS}
               onSelect={handleTopicSelect}
+              drawKey="c-q3"
             />
           )}
 

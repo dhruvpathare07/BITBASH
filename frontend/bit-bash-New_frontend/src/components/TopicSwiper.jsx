@@ -24,12 +24,40 @@ const TOPIC_ICONS = {
   "Number To Words Conversion": "🔢📝",
 };
 
-export default function TopicSwiper({ topics, onSelect }) {
+const SPIN_MS = 3000; // reel spin
+const HOLD_MS = 600;  // "Locked in" moment before the topic card
+
+// One draw per question: the result is kept for the session, so neither a
+// second click nor a page refresh can change the question.
+const drawStorageKey = (drawKey) => `bbbDraw:${drawKey}`;
+
+function savedDraw(drawKey, topics) {
+  if (!drawKey) return null;
+  try {
+    const topic = sessionStorage.getItem(drawStorageKey(drawKey));
+    return topics.includes(topic) ? topic : null;
+  } catch {
+    return null;
+  }
+}
+
+export default function TopicSwiper({ topics, onSelect, drawKey }) {
   const TOPICS = topics; // ✅ dynamic
   const containerRef = useRef(null);
+  const onSelectRef = useRef(onSelect);
+  onSelectRef.current = onSelect;
 
   const [spinning, setSpinning] = useState(false);
+  const [used, setUsed] = useState(false); // the one spin has been used
   const [selectedIndex, setSelectedIndex] = useState(null);
+
+  // Already drawn for this question (e.g. after a refresh): skip the wheel.
+  // On mount only, so the draw just made doesn't cut the "Locked in" pause.
+  useEffect(() => {
+    const topic = savedDraw(drawKey, TOPICS);
+    if (topic) onSelectRef.current(topic);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Start one full set in, so the reel has cards on both sides at rest
   useEffect(() => {
@@ -39,13 +67,21 @@ export default function TopicSwiper({ topics, onSelect }) {
   }, [TOPICS.length]);
 
   const spin = () => {
-    if (spinning) return;
+    if (spinning || used) return;
     setSpinning(true);
+    setUsed(true);
 
     const cardWidth = 200;
     const totalCards = TOPICS.length;
 
     const randomIndex = Math.floor(Math.random() * totalCards);
+    if (drawKey) {
+      try {
+        sessionStorage.setItem(drawStorageKey(drawKey), TOPICS[randomIndex]);
+      } catch {
+        /* storage blocked: the hidden button still stops a second spin */
+      }
+    }
     const spinRounds = 4;
 
     const finalTranslate =
@@ -53,7 +89,7 @@ export default function TopicSwiper({ topics, onSelect }) {
       randomIndex * cardWidth;
 
     containerRef.current.style.transition =
-      "transform 4s cubic-bezier(0.25, 0.1, 0.25, 1)";
+      `transform ${SPIN_MS}ms cubic-bezier(0.25, 0.1, 0.25, 1)`;
     containerRef.current.style.transform =
       `translateX(-${finalTranslate}px)`;
 
@@ -61,8 +97,8 @@ export default function TopicSwiper({ topics, onSelect }) {
       setSelectedIndex(randomIndex);
       setSpinning(false);
       // Hold the "locked in" moment briefly before moving on
-      setTimeout(() => onSelect(TOPICS[randomIndex]), 900);
-    }, 4000);
+      setTimeout(() => onSelectRef.current(TOPICS[randomIndex]), HOLD_MS);
+    }, SPIN_MS);
   };
 
   return (
@@ -130,12 +166,13 @@ export default function TopicSwiper({ topics, onSelect }) {
         </div>
       </div>
 
-      <button className="spin-btn" onClick={spin} disabled={spinning}>
-        <span className="btn-text">
-          {spinning ? "Spinning…" : "Spin the wheel"}
-        </span>
-        <span className="btn-glow"></span>
-      </button>
+      {/* One spin per question: the button is gone once it's used */}
+      {!used && (
+        <button className="spin-btn" onClick={spin}>
+          <span className="btn-text">Spin the wheel</span>
+          <span className="btn-glow"></span>
+        </button>
+      )}
     </div>
   );
 }

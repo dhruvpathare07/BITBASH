@@ -314,6 +314,7 @@ if (isLocked) {
             <TopicSwiper
               topics={HARD_TOPICS}
               onSelect={handleTopicSelect}
+              drawKey="python-q3"
             />
           )}
 
