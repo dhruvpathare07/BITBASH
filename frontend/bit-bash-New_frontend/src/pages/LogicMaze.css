@@ -1,7 +1,7 @@
 /* ============================================================
    Round 2: Logic Maze
    Same layout system as Round 1 (top bar, HUD panels, cut-corner
-   buttons, right rail) but blue leads instead of pink.
+   buttons, right rail) with the same pink and purple colours.
    Everything is scoped under .logic-maze-page.
    ============================================================ */
 
@@ -13,8 +13,8 @@
   font-family: var(--font-ui);
   color: var(--text-primary);
   background:
-    radial-gradient(1100px 560px at 40% -10%, rgba(37, 99, 235, 0.18), transparent 60%),
-    radial-gradient(700px 420px at 100% 100%, rgba(63, 169, 255, 0.10), transparent 70%),
+    radial-gradient(1100px 560px at 40% -10%, rgba(139, 92, 255, 0.18), transparent 60%),
+    radial-gradient(700px 420px at 100% 100%, rgba(255, 79, 176, 0.10), transparent 70%),
     var(--r2-bg);
   overflow-x: clip;
 }
@@ -23,8 +23,8 @@
   position: fixed;
   inset: 0;
   background-image:
-    linear-gradient(rgba(63, 169, 255, 0.05) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(63, 169, 255, 0.05) 1px, transparent 1px);
+    linear-gradient(rgba(255, 79, 176, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 79, 176, 0.05) 1px, transparent 1px);
   background-size: 56px 56px;
   mask-image: radial-gradient(ellipse at 50% 30%, #000 30%, transparent 80%);
   animation: bb-grid-drift 18s linear infinite;
@@ -136,7 +136,7 @@
   font-size: 12px;
   font-weight: 600;
   color: var(--r2-blue);
-  background: rgba(63, 169, 255, 0.14);
+  background: rgba(255, 79, 176, 0.14);
   border-radius: 20px;
 }
 
@@ -160,8 +160,8 @@
 .logic-maze-page .lm-timer b {
   font-family: var(--font-code);
   font-size: 30px;
-  color: #45efff;
-  text-shadow: 0 0 18px rgba(69, 239, 255, 0.6);
+  color: #ff4fb0;
+  text-shadow: 0 0 18px rgba(255, 79, 176, 0.6);
   font-weight: 700;
   letter-spacing: 0.04em;
   font-variant-numeric: tabular-nums;
@@ -227,7 +227,7 @@
   font-size: 14px;
   font-weight: 600;
   color: var(--r2-blue);
-  background: rgba(63, 169, 255, 0.12);
+  background: rgba(255, 79, 176, 0.12);
   border-radius: 3px;
 }
 
@@ -332,7 +332,7 @@
   font-size: 16px;
   font-weight: 700;
   letter-spacing: 0.04em;
-  color: #031327;
+  color: #1a0b24;
   background: var(--r2-blue);
   border: 0;
   clip-path: var(--chamfer);
@@ -373,7 +373,7 @@
   color: var(--text-primary);
   background: var(--r2-panel-raised);
 }
-.logic-maze-page .lm-btn-ghost:hover { background: #1d2c52; }
+.logic-maze-page .lm-btn-ghost:hover { background: #2a2050; }
 
 /* ---------- Maze card ---------- */
 .logic-maze-page .lm-maze .lm-card-head {
@@ -476,13 +476,13 @@
 .logic-maze-page .lm-steps li.current {
   color: var(--text-primary);
   border-color: var(--r2-blue);
-  background: rgba(63, 169, 255, 0.14);
+  background: rgba(255, 79, 176, 0.14);
   animation: stepPulse 2s ease-in-out infinite;
 }
 
 @keyframes stepPulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(63, 169, 255, 0); }
-  50%      { box-shadow: 0 0 0 4px rgba(63, 169, 255, 0.18); }
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255, 79, 176, 0); }
+  50%      { box-shadow: 0 0 0 4px rgba(255, 79, 176, 0.18); }
 }
 
 .logic-maze-page .lm-attempts {
@@ -524,7 +524,7 @@
   width: 28px;
   height: 28px;
   font-size: 15px;
-  color: #031327;
+  color: #1a0b24;
   background: var(--r2-blue);
   border-radius: 50%;
 }
@@ -602,7 +602,7 @@
   font-family: var(--font-ui);
   font-size: 16px;
   font-weight: 700;
-  color: #031327;
+  color: #1a0b24;
   background: var(--r2-blue);
   clip-path: var(--chamfer);
   transition: transform 0.15s var(--ease-out), filter 0.2s;

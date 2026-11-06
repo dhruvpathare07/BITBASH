@@ -30,7 +30,7 @@
   /* leaves room for the card heading, controls and the A-D options row */
   height: clamp(300px, calc(100vh - 64px - 350px), 920px);
   border-radius: 6px;
-  box-shadow: 0 0 30px rgba(35, 125, 255, 0.08), inset 0 0 30px rgba(35, 125, 255, 0.04);
+  box-shadow: 0 0 30px rgba(139, 92, 255, 0.08), inset 0 0 30px rgba(139, 92, 255, 0.04);
 }
 
 /* ---------- Status line ---------- */
@@ -118,13 +118,13 @@
 
 .maze-board-controls button:hover:not(:disabled) {
   border-color: var(--r2-blue);
-  background: #1d2c52;
+  background: #2a2050;
 }
 
 .maze-board-controls button:active:not(:disabled) {
   transform: scale(0.94);
   background: var(--r2-blue);
-  color: #031327;
+  color: #1a0b24;
 }
 
 .maze-board-controls button:disabled {

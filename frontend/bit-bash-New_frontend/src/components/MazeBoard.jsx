@@ -20,22 +20,63 @@ const MOVE_MS = 125;   // one cell of smooth movement
 const TRAIL_MS = 1000; // how long the glowing trail lingers
 const MAX_QUEUED = 2;  // moves buffered while one is animating
 
+// Round 1's palette: deep purple floor, violet walls, pink exits
 const COLORS = {
-  floor: "#080f22",
-  dots: "rgba(67,186,255,.11)",
-  wallGlow: "#3b8cff",
-  wallCore: "#65caff",
+  floor: "#0d0a1c",
+  dots: "rgba(124,92,255,.12)",
+  wallGlow: "#7c5cff",
+  wallCore: "#cbbcff",
   start: "#ffffff",
-  exit: "#ff74df",
+  exit: "#ff4ecd",
   cyan: "#45efff",
 };
+
+// Room around the maze for the exit arrows and letters, in cells
+const EXIT_MARGIN = 1.35;
+
+const OUTWARD = { top: [0, -1], bottom: [0, 1], left: [-1, 0], right: [1, 0] };
+
+// Which outer wall an exit's gate is in
+function gateSide(exit, maze) {
+  if (exit.side) return exit.side;
+  if (exit.y === 0) return "top";
+  if (exit.x === maze.cols - 1) return "right";
+  if (exit.y === maze.rows - 1) return "bottom";
+  return "left";
+}
 
 const IDLE_MESSAGE = "SYSTEM ONLINE — FIND THE CORRECT EXIT AND WALK OUT THROUGH ITS GATE.";
 
 export default function MazeBoard({ maze, question, onEndpoint, disabled = false }) {
   const canvasRef = useRef(null);
   const staticLayerRef = useRef(null); // floor + walls, redrawn only on resize
-  const geometryRef = useRef({ cell: 30, offsetX: 0, offsetY: 0, width: 0, height: 0 });
+  const geometryRef = useRef({ cw: 30, ch: 30, offsetX: 0, offsetY: 0, width: 0, height: 0 });
+  const wallsImageRef = useRef(null);  // the maze image's walls, tinted (image mazes)
+  const [imageReady, setImageReady] = useState(0);
+
+  // Image mazes: load the picture and tint its walls once
+  useEffect(() => {
+    if (!maze?.image?.src) return undefined;
+    let cancelled = false;
+    const img = new Image();
+    img.onload = () => {
+      if (cancelled) return;
+      const tinted = document.createElement("canvas");
+      tinted.width = img.naturalWidth;
+      tinted.height = img.naturalHeight;
+      const tctx = tinted.getContext("2d");
+      tctx.drawImage(img, 0, 0);
+      tctx.globalCompositeOperation = "source-in";
+      tctx.fillStyle = COLORS.wallCore;
+      tctx.fillRect(0, 0, tinted.width, tinted.height);
+      wallsImageRef.current = tinted;
+      setImageReady((n) => n + 1);
+    };
+    img.src = maze.image.src;
+    return () => {
+      cancelled = true;
+    };
+  }, [maze]);
 
   const start = maze?.start ?? { x: 0, y: 0 };
   const exits = LETTERS.map((letter) =>
@@ -79,16 +120,42 @@ export default function MazeBoard({ maze, question, onEndpoint, disabled = false
     canvas.width = Math.floor(rect.width * dpr);
     canvas.height = Math.floor(rect.height * dpr);
 
-    const cell = Math.min((rect.width - 12) / maze.cols, (rect.height - 12) / maze.rows);
-    const geometry = {
-      cell,
-      offsetX: (rect.width - maze.cols * cell) / 2,
-      offsetY: (rect.height - maze.rows * cell) / 2,
-      width: rect.width,
-      height: rect.height,
-      dpr,
-    };
+    const image = maze.image;
+    const wallsImage = wallsImageRef.current;
+    if (image && !wallsImage) return false; // picture still loading
+
+    let geometry;
+    if (image) {
+      // fit the picture, leaving room around it for the exit arrows
+      const scale = Math.min(
+        rect.width / (image.width + 2 * EXIT_MARGIN * image.cellW),
+        rect.height / (image.height + 2 * EXIT_MARGIN * image.cellH)
+      );
+      const left = (rect.width - image.width * scale) / 2;
+      const top = (rect.height - image.height * scale) / 2;
+      geometry = {
+        cw: image.cellW * scale,
+        ch: image.cellH * scale,
+        offsetX: left + image.x0 * scale,
+        offsetY: top + image.y0 * scale,
+        image: { left, top, width: image.width * scale, height: image.height * scale },
+      };
+    } else {
+      const cell = Math.min(
+        rect.width / (maze.cols + 2 * EXIT_MARGIN),
+        rect.height / (maze.rows + 2 * EXIT_MARGIN)
+      );
+      geometry = {
+        cw: cell,
+        ch: cell,
+        offsetX: (rect.width - maze.cols * cell) / 2,
+        offsetY: (rect.height - maze.rows * cell) / 2,
+      };
+    }
+    Object.assign(geometry, { width: rect.width, height: rect.height, dpr });
     geometryRef.current = geometry;
+    const cw = geometry.cw;
+    const ch = geometry.ch;
 
     const layer = staticLayerRef.current || document.createElement("canvas");
     staticLayerRef.current = layer;
@@ -108,36 +175,49 @@ export default function MazeBoard({ maze, question, onEndpoint, disabled = false
       }
     }
 
+    if (image) {
+      // The maze picture's own walls, tinted, with a soft glow
+      const { left, top, width, height } = geometry.image;
+      ctx.save();
+      ctx.shadowColor = COLORS.wallGlow;
+      ctx.shadowBlur = 10;
+      ctx.drawImage(wallsImage, left, top, width, height);
+      ctx.shadowBlur = 0;
+      ctx.drawImage(wallsImage, left, top, width, height);
+      ctx.restore();
+      return true;
+    }
+
     // All walls as one path, stroked twice: a wide glow, then a bright core
     ctx.beginPath();
     for (let y = 0; y < maze.rows; y += 1) {
       for (let x = 0; x < maze.cols; x += 1) {
         const walls = maze.cells[y][x];
-        const px = geometry.offsetX + x * cell;
-        const py = geometry.offsetY + y * cell;
+        const px = geometry.offsetX + x * cw;
+        const py = geometry.offsetY + y * ch;
 
         if (walls.top) {
           ctx.moveTo(px, py);
-          ctx.lineTo(px + cell, py);
+          ctx.lineTo(px + cw, py);
         }
         if (walls.left) {
           ctx.moveTo(px, py);
-          ctx.lineTo(px, py + cell);
+          ctx.lineTo(px, py + ch);
         }
         // right/bottom only on the outer edge; inner ones are the
         // neighbour's left/top
         if (walls.right && x === maze.cols - 1) {
-          ctx.moveTo(px + cell, py);
-          ctx.lineTo(px + cell, py + cell);
+          ctx.moveTo(px + cw, py);
+          ctx.lineTo(px + cw, py + ch);
         }
         if (walls.bottom && y === maze.rows - 1) {
-          ctx.moveTo(px, py + cell);
-          ctx.lineTo(px + cell, py + cell);
+          ctx.moveTo(px, py + ch);
+          ctx.lineTo(px + cw, py + ch);
         }
       }
     }
 
-    ctx.lineWidth = Math.max(2, cell * 0.085);
+    ctx.lineWidth = Math.max(2, Math.min(cw, ch) * 0.085);
     ctx.lineCap = "round";
     ctx.lineJoin = "round";
 
@@ -152,7 +232,9 @@ export default function MazeBoard({ maze, question, onEndpoint, disabled = false
     ctx.shadowBlur = 0;
 
     return true;
-  }, [maze]);
+    // imageReady: rebuild once the maze picture has loaded
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [maze, imageReady]);
 
   /* ---------- per-frame drawing ---------- */
   const drawFrame = useCallback(
@@ -169,14 +251,15 @@ export default function MazeBoard({ maze, question, onEndpoint, disabled = false
       ctx.drawImage(layer, 0, 0);
       ctx.setTransform(g.dpr, 0, 0, g.dpr, 0, 0);
 
-      const center = (x, y) => [g.offsetX + (x + 0.5) * g.cell, g.offsetY + (y + 0.5) * g.cell];
+      const center = (x, y) => [g.offsetX + (x + 0.5) * g.cw, g.offsetY + (y + 0.5) * g.ch];
+      const unit = Math.min(g.cw, g.ch); // size of things drawn in a cell
 
       const marker = (x, y, label, color, glow) => {
         const [px, py] = center(x, y);
         ctx.save();
         ctx.beginPath();
-        ctx.arc(px, py, Math.max(7, g.cell * 0.32), 0, Math.PI * 2);
-        ctx.fillStyle = "#0b1530";
+        ctx.arc(px, py, Math.max(7, unit * 0.32), 0, Math.PI * 2);
+        ctx.fillStyle = "#140f2b";
         ctx.fill();
         ctx.strokeStyle = color;
         ctx.lineWidth = 2;
@@ -185,7 +268,7 @@ export default function MazeBoard({ maze, question, onEndpoint, disabled = false
         ctx.stroke();
         ctx.shadowBlur = 0;
         ctx.fillStyle = color;
-        ctx.font = `bold ${Math.max(10, g.cell * 0.4)}px Arial`;
+        ctx.font = `bold ${Math.max(10, unit * 0.4)}px Arial`;
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
         ctx.fillText(label, px, py + 1);
@@ -193,8 +276,60 @@ export default function MazeBoard({ maze, question, onEndpoint, disabled = false
       };
 
       marker(start.x, start.y, "S", COLORS.start, 13);
-      const pulse = 10 + Math.sin(now / 380) * 6; // exits breathe so they're easy to spot
-      exits.forEach((exit) => marker(exit.x, exit.y, exit.letter, COLORS.exit, pulse));
+
+      // Each exit: an arrow leading out through its gate, then the option
+      // letter it stands for ("leave here = option A")
+      const pulse = 0.5 + Math.sin(now / 380) * 0.5; // exits breathe so they're easy to spot
+      exits.forEach((exit) => {
+        const [dx, dy] = OUTWARD[gateSide(exit, maze)];
+        const [cx, cy] = center(exit.x, exit.y);
+        // the gate: middle of the cell's outer wall
+        const gx = cx + dx * g.cw * 0.5;
+        const gy = cy + dy * g.ch * 0.5;
+        const len = unit * 0.62;
+        const head = unit * 0.3;
+
+        ctx.save();
+        ctx.translate(gx, gy);
+        ctx.rotate(Math.atan2(dy, dx));
+        ctx.strokeStyle = COLORS.exit;
+        ctx.fillStyle = COLORS.exit;
+        ctx.shadowColor = COLORS.exit;
+        ctx.shadowBlur = 8 + pulse * 10;
+        ctx.lineWidth = Math.max(2.5, unit * 0.12);
+        ctx.lineCap = "round";
+        ctx.beginPath();
+        ctx.moveTo(-unit * 0.15, 0);
+        ctx.lineTo(len - head * 0.6, 0);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(len, 0);
+        ctx.lineTo(len - head, -head * 0.75);
+        ctx.lineTo(len - head, head * 0.75);
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+
+        // the letter badge just beyond the arrow
+        const dist = len + unit * 0.48;
+        const bx = gx + dx * dist;
+        const by = gy + dy * dist;
+        const r = Math.max(9, unit * 0.4);
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(bx, by, r, 0, Math.PI * 2);
+        ctx.fillStyle = COLORS.exit;
+        ctx.shadowColor = COLORS.exit;
+        ctx.shadowBlur = 10 + pulse * 8;
+        ctx.fill();
+        ctx.shadowBlur = 0;
+        ctx.fillStyle = "#1a0b24";
+        ctx.font = `900 ${Math.max(11, r * 1.15)}px Arial`;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText(exit.letter, bx, by + 1);
+        ctx.restore();
+      });
 
       // Fading trail
       const s = stateRef.current;
@@ -204,7 +339,7 @@ export default function MazeBoard({ maze, question, onEndpoint, disabled = false
         ctx.save();
         ctx.lineCap = "round";
         ctx.lineJoin = "round";
-        ctx.lineWidth = g.cell * 0.22;
+        ctx.lineWidth = unit * 0.22;
         ctx.shadowColor = COLORS.cyan;
         ctx.shadowBlur = 17;
         for (let i = 1; i < points.length; i += 1) {
@@ -220,61 +355,23 @@ export default function MazeBoard({ maze, question, onEndpoint, disabled = false
         ctx.restore();
       }
 
-      // Arrow from the player towards the nearest exit (straight line, so
-      // it shows the direction, not the route)
       const [px, py] = center(s.renderX, s.renderY);
-      const nearest = exits.reduce((best, e) => {
-        const d = Math.hypot(e.x - s.renderX, e.y - s.renderY);
-        return !best || d < best.d ? { e, d } : best;
-      }, null);
-      if (nearest && nearest.d > 0.5) {
-        const [ex, ey] = center(nearest.e.x, nearest.e.y);
-        const angle = Math.atan2(ey - py, ex - px);
-        const r = g.cell * 0.55;
-        const size = Math.max(10, g.cell * 0.6);
-        ctx.save();
-        ctx.translate(px, py);
-        ctx.rotate(angle);
-        ctx.beginPath();
-        ctx.moveTo(r + size, 0);
-        ctx.lineTo(r, -size * 0.75);
-        ctx.lineTo(r + size * 0.3, 0);
-        ctx.lineTo(r, size * 0.75);
-        ctx.closePath();
-        ctx.fillStyle = COLORS.exit;
-        ctx.shadowColor = COLORS.exit;
-        ctx.shadowBlur = 10;
-        ctx.fill();
-        ctx.restore();
-        // which exit it points at
-        const lx = px + Math.cos(angle) * (r + size * 1.7);
-        const ly = py + Math.sin(angle) * (r + size * 1.7);
-        ctx.save();
-        ctx.font = `bold ${Math.max(12, g.cell * 0.5)}px Arial`;
-        ctx.textAlign = "center";
-        ctx.textBaseline = "middle";
-        ctx.fillStyle = "#ffd6f5";
-        ctx.shadowColor = "#000";
-        ctx.shadowBlur = 4;
-        ctx.fillText(nearest.e.letter, lx, ly);
-        ctx.restore();
-      }
 
       // Player: soft halo, white core, cyan centre
       ctx.save();
       ctx.shadowColor = COLORS.cyan;
       ctx.beginPath();
-      ctx.arc(px, py, g.cell * 0.36, 0, Math.PI * 2);
+      ctx.arc(px, py, unit * 0.36, 0, Math.PI * 2);
       ctx.fillStyle = "rgba(69,239,255,.18)";
       ctx.shadowBlur = 25;
       ctx.fill();
       ctx.beginPath();
-      ctx.arc(px, py, g.cell * 0.19, 0, Math.PI * 2);
+      ctx.arc(px, py, unit * 0.19, 0, Math.PI * 2);
       ctx.fillStyle = "#ffffff";
       ctx.shadowBlur = 20;
       ctx.fill();
       ctx.beginPath();
-      ctx.arc(px, py, g.cell * 0.09, 0, Math.PI * 2);
+      ctx.arc(px, py, unit * 0.09, 0, Math.PI * 2);
       ctx.fillStyle = COLORS.cyan;
       ctx.shadowBlur = 0;
       ctx.fill();
