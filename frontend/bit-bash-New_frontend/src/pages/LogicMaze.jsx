@@ -1,4 +1,3 @@
-
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import MazeBoard from "../components/MazeBoard";
@@ -62,7 +61,9 @@ const resultsSavedRef = useRef(false);
   const timeUpRef = useRef(null);
 
   const question = questions?.[questionIndex];
-  const maze = LOGIC_MAZE_MAPS?.[questionIndex];
+  const maze = LOGIC_MAZE_MAPS?.find((item) =>
+    String(item.id).replace(/[^0-9]/g, "") === String(question?.number)
+  ) || LOGIC_MAZE_MAPS?.[questionIndex];
 
   useEffect(() => {
     validateLogicMazeQuestions();
