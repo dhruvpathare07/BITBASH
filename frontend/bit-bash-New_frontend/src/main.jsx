@@ -2,11 +2,16 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import App from './App.jsx'
 import { startResultSync } from './config'
+import { startSmoothScroll, startReveal } from './utils/smoothMotion'
 import './styles/theme.css'
 import './styles/main.css'
 
 // Send any scores queued while the network was down
 startResultSync()
+
+// Slow, smooth scrolling and sections that slide in as you scroll
+startSmoothScroll()
+startReveal()
 
 // Cache the whole app so it keeps working (and reloads) with the network cut.
 // Production only: in dev the service worker would serve stale files.

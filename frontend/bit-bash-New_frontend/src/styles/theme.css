@@ -201,6 +201,21 @@
   to   { background-position: 0 56px, 56px 0; }
 }
 
+/* Scroll reveal (src/utils/smoothMotion.js): fade and slide up, slowly.
+   Hiding is instant (no transition) so nothing fades out on load; only the
+   reveal itself is animated. */
+.reveal {
+  opacity: 0;
+  transform: translate3d(0, 42px, 0);
+}
+.reveal.is-revealed {
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity 1s cubic-bezier(0.16, 1, 0.3, 1) var(--reveal-delay, 0ms),
+    transform 1.15s cubic-bezier(0.16, 1, 0.3, 1) var(--reveal-delay, 0ms);
+}
+
 /* Respect people who turn motion off */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
