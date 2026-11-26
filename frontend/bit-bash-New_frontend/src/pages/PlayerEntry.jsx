@@ -71,11 +71,52 @@ export default function PlayerEntry() {
     // a new player draws their own Round 1 topics, with fresh clocks
     clearQuestionState();
     clearRound2Order(); // new player -> new Round 2 question/option order
-
+    // TEST ONLY: Clear direct-navigation access when starting a normal game.
+    sessionStorage.removeItem("bbbTestNavigation");
     // Navigate to correct language folder
     // 👈 DYNAMIC ROUTE BASED ON LANGUAGE
     const routePath = language === "c" ? "/c/question-1" : "/python/question-1";
     navigate(routePath);
+  };
+
+  // ==========================================================
+  // TEST ONLY: DIRECT NAVIGATION FUNCTION
+  // Remove this function before the event.
+  // Saves the player profile and opens the selected page.
+  // Does not generate or modify any result data.
+  // ==========================================================
+  const handleTestNavigate = (path) => {
+    if (
+      !fullName.trim() ||
+      !username.trim() ||
+      !className.trim() ||
+      avatar === null
+    ) {
+      setError(
+        avatar === null
+          ? "Pick an avatar and fill in every field to continue."
+          : "Fill in every field to continue."
+      );
+      setErrorKey((k) => k + 1);
+      return;
+    }
+
+    setError("");
+
+    const profile = {
+      fullName,
+      username,
+      className,
+      avatar,
+      language
+    };
+
+    sessionStorage.setItem("playerProfile", JSON.stringify(profile));
+
+    // TEST ONLY: Allows RequireRound1 to bypass its normal check.
+    sessionStorage.setItem("bbbTestNavigation", "true");
+
+    navigate(path);
   };
 
   const picked = avatars.find((a) => a.id === avatar);
@@ -188,9 +229,52 @@ export default function PlayerEntry() {
             <button type="submit" className="start-btn">
               Start Round 1
             </button>
+
+            {/* ==================================================
+                TEST ONLY: DIRECT NAVIGATION BUTTONS
+                Remove this entire section before the event.
+                ================================================== */}
+            {import.meta.env.DEV && (
+              <div className="test-navigation">
+                <h3>TEST MODE — DIRECT NAVIGATION</h3>
+                <p>Open a page directly without completing previous rounds.</p>
+
+                <div className="test-navigation-buttons">
+                  <button
+                    type="button"
+                    onClick={() => handleTestNavigate("/results")}
+                  >
+                    Round 1 Results
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => handleTestNavigate("/round-2")}
+                  >
+                    Round 2 Intro
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => handleTestNavigate("/logic-maze")}
+                  >
+                    Logic Maze
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => handleTestNavigate("/round2-results")}
+                  >
+                    Round 2 Results
+                  </button>
+                </div>
+              </div>
+            )}
+
           </div>
         </form>
       </main>
     </div>
   );
+
 }

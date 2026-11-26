@@ -8,7 +8,17 @@ export default function RequireRound1({ children }) {
   const player = JSON.parse(sessionStorage.getItem("playerProfile") || "{}");
   const language = player.language?.toLowerCase() || "python";
   const results = JSON.parse(sessionStorage.getItem("bbbResults") || "{}");
-
+  // ==========================================================
+  // TEST ONLY: DIRECT NAVIGATION BYPASS
+  // Remove this block before the event.
+  // Allows testing buttons to access Round 2 pages directly.
+  // ==========================================================
+  if (
+    import.meta.env.DEV &&
+    sessionStorage.getItem("bbbTestNavigation") === "true"
+  ) {
+    return children;
+  }
   // Round 1 not finished yet -> back to the first question.
   if (!results[language]?.Q3) {
     const round1Start = language === "c" ? "/c/question-1" : "/python/question-1";

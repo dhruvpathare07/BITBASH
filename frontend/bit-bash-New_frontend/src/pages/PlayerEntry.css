@@ -359,3 +359,53 @@
   .entry-container .field-row { grid-template-columns: 1fr; }
   .entry-container .avatar-grid { grid-template-columns: repeat(4, 1fr); }
 }
+
+/* ==========================================================
+   TEST ONLY: DIRECT NAVIGATION BUTTONS
+   Remove this entire block before the event.
+   ========================================================== */
+
+.test-navigation {
+  position: relative;
+  z-index: 30;
+  width: min(700px, 95%);
+  padding: 14px 18px;
+  margin-top: 10px;
+  border: 1px dashed #ffb347;
+  border-radius: 12px;
+  background: rgba(20, 20, 35, 0.92);
+  text-align: center;
+}
+
+.test-navigation h3 {
+  color: #ffb347;
+  margin-bottom: 6px;
+}
+
+.test-navigation p {
+  color: #ffffff;
+  font-size: 13px;
+  margin-bottom: 12px;
+}
+
+.test-navigation-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+}
+
+.test-navigation-buttons button {
+  padding: 9px 13px;
+  border: 1px solid #ffb347;
+  border-radius: 7px;
+  background: transparent;
+  color: #ffffff;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.test-navigation-buttons button:hover {
+  background: #ffb347;
+  color: #171717;
+}

@@ -738,3 +738,91 @@
   .logic-maze-page .lm-rail { position: static; }
   .logic-maze-page .lm-player { display: none; }
 }
+
+/* ---------- Rough Work Scratchpad ---------- */
+
+.logic-maze-page .lm-side-column {
+  position: sticky;
+  top: calc(var(--bar-h) + 24px);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
+/* The side column now controls sticky positioning */
+.logic-maze-page .lm-rail {
+  position: static;
+}
+
+.logic-maze-page .lm-scratchpad {
+  padding: 18px;
+  background: var(--hud-corners-blue), var(--r2-panel);
+  border: 1px solid var(--r2-line);
+  border-radius: 4px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.3);
+}
+
+.logic-maze-page .lm-scratchpad-head {
+  margin-bottom: 12px;
+}
+
+.logic-maze-page .lm-scratchpad-head h2 {
+  margin: 0 0 5px;
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.logic-maze-page .lm-scratchpad-head p {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.logic-maze-page .lm-scratchpad-input {
+  display: block;
+  width: 100%;
+  min-height: 190px;
+  resize: vertical;
+  padding: 12px;
+  font-family: var(--font-code);
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--text-primary);
+  background: var(--r2-panel-sunken);
+  border: 1px solid var(--r2-line);
+  border-left: 3px solid var(--r2-blue);
+  border-radius: 3px;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.logic-maze-page .lm-scratchpad-input::placeholder {
+  color: var(--text-faint);
+  opacity: 0.8;
+}
+
+.logic-maze-page .lm-scratchpad-input:focus {
+  border-color: var(--r2-blue);
+  box-shadow: 0 0 0 3px rgba(255, 79, 176, 0.10);
+}
+
+/* Responsive layout */
+@media (max-width: 1100px) {
+  .logic-maze-page .lm-side-column {
+    position: static;
+  }
+}
+
+/* Back to the code — dark pink option-alphabet colour */
+.logic-maze-page .lm-btn-ghost {
+  color: #1a0b24;
+  background: var(--r2-blue);
+  border: 1px solid var(--r2-blue);
+}
+
+.logic-maze-page .lm-btn-ghost:hover {
+  background: var(--r2-blue);
+  filter: brightness(1.12);
+}
