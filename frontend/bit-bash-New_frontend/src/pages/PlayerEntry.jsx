@@ -1,10 +1,11 @@
 'use client';
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import "./PlayerEntry.css";
 import { clearQuestionState } from "../utils/questionStage";
 import { clearRound2Order } from "../utils/shuffleRound2";
+import { fetchSettings } from "../config";
 
 const avatars = [
   { id: 0, emoji: "🐶", label: "Puppy" },
@@ -29,6 +30,22 @@ export default function PlayerEntry() {
   const [avatar, setAvatar] = useState(null);
   const [error, setError] = useState("");
   const [errorKey, setErrorKey] = useState(0);
+
+  // Test-mode navigation shows only when the admin turns it on
+  // (Admin panel -> "Hide test mode navigation"). Hidden until we know.
+  const [showTestNav, setShowTestNav] = useState(false);
+  useEffect(() => {
+    let cancelled = false;
+    fetchSettings().then((settings) => {
+      if (cancelled) return;
+      const show = settings.hideTestNavigation === false;
+      setShowTestNav(show);
+      if (!show) sessionStorage.removeItem("bbbTestNavigation");
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -234,7 +251,7 @@ export default function PlayerEntry() {
                 TEST ONLY: DIRECT NAVIGATION BUTTONS
                 Remove this entire section before the event.
                 ================================================== */}
-            {import.meta.env.DEV && (
+            {showTestNav && (
               <div className="test-navigation">
                 <h3>TEST MODE — DIRECT NAVIGATION</h3>
                 <p>Open a page directly without completing previous rounds.</p>

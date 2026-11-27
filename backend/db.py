@@ -60,6 +60,21 @@ CREATE TABLE IF NOT EXISTS results (
 )
 """
 
+# Small key/value store for event settings the admin can switch
+_SETTINGS_SCHEMA = """
+CREATE TABLE IF NOT EXISTS settings (
+    key   TEXT PRIMARY KEY,
+    value TEXT
+)
+"""
+
+# Every setting and its value until the admin changes it
+DEFAULT_SETTINGS = {
+    # Hide the test-mode shortcuts (jump to results / Round 2 / maze) on the
+    # player entry page. On by default, so players never see them.
+    "hideTestNavigation": True,
+}
+
 
 def _connect():
     if _IS_PG:
@@ -93,6 +108,7 @@ def init_db():
     try:
         cur = conn.cursor()
         cur.execute(_SCHEMA)
+        cur.execute(_SETTINGS_SCHEMA)
         _ensure_columns(cur)
         conn.commit()
     finally:
@@ -141,6 +157,51 @@ def save_result(username, name, class_name, rnd, score, language="", time_taken=
         conn.commit()
     finally:
         conn.close()
+
+
+def get_settings():
+    """All settings, with defaults for any the admin hasn't changed."""
+    settings = dict(DEFAULT_SETTINGS)
+    conn = _connect()
+    try:
+        cur = conn.cursor()
+        cur.execute("SELECT key, value FROM settings")
+        rows = cur.fetchall()
+    finally:
+        conn.close()
+    for key, value in rows:
+        if key in settings:
+            try:
+                settings[key] = json.loads(value)
+            except (TypeError, ValueError):
+                pass
+    return settings
+
+
+def set_settings(changes):
+    """Save known settings (others are ignored). Returns all settings."""
+    conn = _connect()
+    try:
+        cur = conn.cursor()
+        for key, value in changes.items():
+            if key not in DEFAULT_SETTINGS:
+                continue
+            if _IS_PG:
+                cur.execute(
+                    "INSERT INTO settings (key, value) VALUES (%s, %s) "
+                    "ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value",
+                    (key, json.dumps(value)),
+                )
+            else:
+                cur.execute(
+                    "INSERT INTO settings (key, value) VALUES (?, ?) "
+                    "ON CONFLICT(key) DO UPDATE SET value = excluded.value",
+                    (key, json.dumps(value)),
+                )
+        conn.commit()
+    finally:
+        conn.close()
+    return get_settings()
 
 
 def clear_all_results():

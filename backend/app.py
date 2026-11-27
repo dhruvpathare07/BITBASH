@@ -11,7 +11,7 @@ from flask_cors import CORS
 from evaluator import check_code_line_by_line, calculate_line_progress, run_test_cases, normalize, classify_error, CORRECT_CODE
 from c_evaluator import check_code_line_by_line_c, calculate_line_progress_c, run_test_cases_c, classify_error_c, C_CORRECT_CODE
 from runner import run_code   # ✅ Added
-from db import init_db, save_result, get_all_results, clear_all_results
+from db import init_db, save_result, get_all_results, clear_all_results, get_settings, set_settings
 
 app = Flask(__name__)
 
@@ -70,7 +70,7 @@ ALLOWED_ORIGINS = DEFAULT_ORIGINS + [
 CORS(
     app,
     origins=ALLOWED_ORIGINS,
-    methods=["POST", "OPTIONS"],
+    methods=["GET", "POST", "OPTIONS"],
     allow_headers=["Content-Type"]
 )
 
@@ -320,7 +320,7 @@ def admin_results():
         data = read_json_object() or {}
         if str(data.get("passkey") or "") != ADMIN_PASSKEY:
             return jsonify(success=False, error="Unauthorized"), 401
-        return jsonify(success=True, results=get_all_results())
+        return jsonify(success=True, results=get_all_results(), settings=get_settings())
     except Exception:
         logger.exception("Error in /admin/results")
         return jsonify(success=False, error="Internal server error"), 500
@@ -346,6 +346,46 @@ def admin_clear():
         return jsonify(success=True, removed=removed)
     except Exception:
         logger.exception("Error in /admin/clear")
+        return jsonify(success=False, error="Internal server error"), 500
+
+
+@app.route("/settings", methods=["GET"])
+@rate_limit(1000, 60)
+def public_settings():
+    """Settings the game needs (e.g. whether to show test navigation).
+    Nothing secret here; anyone can read them."""
+    try:
+        return jsonify(success=True, settings=get_settings())
+    except Exception:
+        logger.exception("Error in /settings")
+        return jsonify(success=False, error="Internal server error"), 500
+
+
+@app.route("/admin/settings", methods=["POST", "OPTIONS"])
+@rate_limit(20, 60)
+def admin_settings():
+    """Change settings. Needs the passkey. Body: {passkey, settings: {...}}."""
+    if request.method == "OPTIONS":
+        return "", 200
+    try:
+        if not ADMIN_PASSKEY:
+            return jsonify(success=False, error="Admin not configured"), 503
+        data = read_json_object() or {}
+        if str(data.get("passkey") or "") != ADMIN_PASSKEY:
+            return jsonify(success=False, error="Unauthorized"), 401
+        changes = data.get("settings")
+        if not isinstance(changes, dict):
+            return jsonify(success=False, error="Invalid settings"), 400
+        clean = {}
+        if "hideTestNavigation" in changes:
+            if not isinstance(changes["hideTestNavigation"], bool):
+                return jsonify(success=False, error="Invalid settings"), 400
+            clean["hideTestNavigation"] = changes["hideTestNavigation"]
+        settings = set_settings(clean)
+        logger.info("Admin changed settings: %s", clean)
+        return jsonify(success=True, settings=settings)
+    except Exception:
+        logger.exception("Error in /admin/settings")
         return jsonify(success=False, error="Internal server error"), 500
 
 

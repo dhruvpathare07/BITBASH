@@ -10,13 +10,10 @@ export default function RequireRound1({ children }) {
   const results = JSON.parse(sessionStorage.getItem("bbbResults") || "{}");
   // ==========================================================
   // TEST ONLY: DIRECT NAVIGATION BYPASS
-  // Remove this block before the event.
-  // Allows testing buttons to access Round 2 pages directly.
+  // Set by the test buttons on the player entry page, which only show
+  // when the admin turns off "Hide test mode navigation".
   // ==========================================================
-  if (
-    import.meta.env.DEV &&
-    sessionStorage.getItem("bbbTestNavigation") === "true"
-  ) {
+  if (sessionStorage.getItem("bbbTestNavigation") === "true") {
     return children;
   }
   // Round 1 not finished yet -> back to the first question.

@@ -100,3 +100,28 @@ export function startResultSync() {
     if (pendingResultCount() > 0) flushOutbox();
   }, RETRY_EVERY_MS);
 }
+
+/* ------------------------------------------------------------------
+   Event settings the admin can switch (see Admin panel)
+   ------------------------------------------------------------------ */
+export const DEFAULT_SETTINGS = {
+  // test-mode shortcuts on the player entry page stay hidden unless the
+  // admin turns them on
+  hideTestNavigation: true,
+};
+
+/** Current settings from the server; the defaults if it can't be reached. */
+export async function fetchSettings() {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 5000);
+  try {
+    const res = await fetch(`${API_BASE}/settings`, { signal: controller.signal });
+    if (!res.ok) return { ...DEFAULT_SETTINGS };
+    const data = await res.json();
+    return { ...DEFAULT_SETTINGS, ...(data.settings || {}) };
+  } catch {
+    return { ...DEFAULT_SETTINGS };
+  } finally {
+    clearTimeout(timer);
+  }
+}

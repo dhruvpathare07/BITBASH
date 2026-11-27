@@ -52,6 +52,36 @@ export default function Admin() {
   const [clearError, setClearError] = useState("");
   const [notice, setNotice] = useState("");
 
+  // Event settings (saved on the server, apply to every player)
+  const [settings, setSettings] = useState(null);
+  const [savingSetting, setSavingSetting] = useState(false);
+
+  const toggleHideTestNav = async () => {
+    if (!settings || savingSetting) return;
+    const next = !settings.hideTestNavigation;
+    setSavingSetting(true);
+    setNotice("");
+    try {
+      const res = await fetch(`${API_BASE}/admin/settings`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ passkey: passkey.trim(), settings: { hideTestNavigation: next } }),
+      });
+      if (res.status === 401) throw new Error("Wrong passkey. Unlock the panel again.");
+      if (!res.ok) throw new Error("The setting wasn't saved. Try again.");
+      const data = await res.json();
+      setSettings(data.settings);
+      setNotice(
+        data.settings.hideTestNavigation
+          ? "Test mode navigation is now hidden from players."
+          : "Test mode navigation is now visible on the player entry page."
+      );
+    } catch (e) {
+      setNotice(e.message || "Couldn't reach the server. The setting wasn't changed.");
+    }
+    setSavingSetting(false);
+  };
+
   // Player whose full results are shown in the details popup
   const [detailsFor, setDetailsFor] = useState(null);
 
@@ -104,6 +134,7 @@ export default function Admin() {
       if (!res.ok) throw new Error("Request failed");
       const data = await res.json();
       setRows(data.results || []);
+      if (data.settings) setSettings(data.settings);
       setAuthed(true);
     } catch {
       setError("Could not reach the server.");
@@ -367,6 +398,33 @@ export default function Admin() {
             </button>
           </div>
         </div>
+
+        {settings && (
+          <div className="admin-settings">
+            <div className="admin-setting">
+              <div className="admin-setting-text">
+                <span className="admin-setting-name">Hide test mode navigation</span>
+                <span className="admin-setting-help">
+                  {settings.hideTestNavigation
+                    ? "On: players don't see the test shortcuts on the player entry page."
+                    : "Off: the player entry page shows buttons that skip straight to the results, Round 2 and the maze."}
+                </span>
+              </div>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={settings.hideTestNavigation}
+                aria-label="Hide test mode navigation"
+                className={`admin-switch${settings.hideTestNavigation ? " is-on" : ""}`}
+                onClick={toggleHideTestNav}
+                disabled={savingSetting}
+              >
+                <span className="admin-switch-knob" />
+                <span className="admin-switch-label">{settings.hideTestNavigation ? "ON" : "OFF"}</span>
+              </button>
+            </div>
+          </div>
+        )}
 
         {notice && (
           <div className="admin-notice" role="status">
