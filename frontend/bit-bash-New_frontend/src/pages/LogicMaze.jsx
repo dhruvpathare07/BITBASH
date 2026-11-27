@@ -6,7 +6,12 @@ import {
   validateLogicMazeQuestions,
 } from "../data/logicMazeQuestions";
 import { LOGIC_MAZE_MAPS } from "../data/logicMazeMaps";
-import { shuffledRound2Questions } from "../utils/shuffleRound2";
+import {
+  shuffledRound2Questions,
+  loadRound2Progress,
+  saveRound2Progress,
+  clearRound2Progress,
+} from "../utils/shuffleRound2";
 import "./LogicMaze.css";
 
 const LETTERS = ["A", "B", "C", "D"];
@@ -39,23 +44,39 @@ export default function LogicMaze() {
   );
 
 
-  const [questionIndex, setQuestionIndex] = useState(0);
+  // Progress saved before a refresh (null on a fresh start). The clock runs
+  // to a saved deadline, so refreshing never gives time back.
+  const [saved] = useState(() => loadRound2Progress(language));
+  const [deadline, setDeadline] = useState(
+    () => saved?.deadline ?? Date.now() + ROUND_SECONDS * 1000
+  );
+  const secondsUntil = (end) => Math.max(0, Math.ceil((end - Date.now()) / 1000));
+
+  const [questionIndex, setQuestionIndex] = useState(() =>
+    Math.min(saved?.questionIndex ?? 0, Math.max(0, questions.length - 1))
+  );
   const [view, setView] = useState("question");
-  const [score, setScore] = useState(0);
-  const [timeLeft, setTimeLeft] = useState(ROUND_SECONDS);
-  const [status, setStatus] = useState("playing");
+  const [score, setScore] = useState(saved?.score ?? 0);
+  const [timeLeft, setTimeLeft] = useState(() => secondsUntil(deadline));
+  const [status, setStatus] = useState(() =>
+    saved?.finished
+      ? "completed"
+      : secondsUntil(saved?.deadline ?? Infinity) === 0
+        ? "time-up"
+        : "playing"
+  );
   const [feedback, setFeedback] = useState(
   "Predict the output, then click Next to enter the maze."
 );
   const [locked, setLocked] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
-  const [attempts, setAttempts] = useState(0);
+  const [attempts, setAttempts] = useState(saved?.attempts ?? 0);
   const [boardResetKey, setBoardResetKey] = useState(0);
   // Rough work for the current question only
   const [roughWork, setRoughWork] = useState("");
   const transitionRef = useRef(null);
   const questionStartedAtRef = useRef(Date.now());
-const questionResultsRef = useRef([]);
+const questionResultsRef = useRef(Array.isArray(saved?.results) ? saved.results : []);
 const resultsSavedRef = useRef(false);
   const timeUpRef = useRef(null);
 
@@ -68,24 +89,37 @@ const resultsSavedRef = useRef(false);
     validateLogicMazeQuestions();
   }, []);
 
-  // Countdown timer
+  // Countdown timer: counts down to the saved deadline
   useEffect(() => {
     if (status !== "playing") return undefined;
 
-    const timerId = window.setInterval(() => {
-      setTimeLeft((remaining) => {
-        if (remaining <= 1) {
-          window.clearInterval(timerId);
-          setStatus("time-up");
-          return 0;
-        }
-
-        return remaining - 1;
-      });
-    }, 1000);
+    const tick = () => {
+      const remaining = secondsUntil(deadline);
+      setTimeLeft(remaining);
+      if (remaining === 0) {
+        window.clearInterval(timerId);
+        setStatus("time-up");
+      }
+    };
+    const timerId = window.setInterval(tick, 250);
+    tick();
 
     return () => window.clearInterval(timerId);
-  }, [status]);
+  }, [status, deadline]);
+
+  // Keep progress for a refresh. A cleared maze counts as moved past, so
+  // refreshing on the "MAZE CLEARED" popup can't earn its marks twice.
+  useEffect(() => {
+    const cleared = showSuccess ? 1 : 0;
+    saveRound2Progress(language, {
+      deadline,
+      questionIndex: questionIndex + cleared,
+      score,
+      attempts,
+      results: questionResultsRef.current,
+      finished: status !== "playing" || questionIndex + cleared >= questions.length,
+    });
+  }, [language, deadline, questionIndex, score, attempts, status, showSuccess, questions.length]);
 
   // Clean up any pending transition when leaving the page
   useEffect(() => {
@@ -140,15 +174,8 @@ const resultsSavedRef = useRef(false);
     JSON.stringify(finalResult)
   );
 
-  // Time ran out: show the TIME'S UP screen for a moment first
-  if (status === "time-up") {
-    timeUpRef.current = window.setTimeout(
-      () => navigate("/round2-results", { replace: true }),
-      TIME_UP_SHOW_MS
-    );
-  } else {
-    navigate("/round2-results", { replace: true });
-  }
+  // Finished early: straight to the results. (Time's up waits; see below.)
+  if (status !== "time-up") navigate("/round2-results", { replace: true });
 }, [
   status,
   profile,
@@ -160,6 +187,17 @@ const resultsSavedRef = useRef(false);
   questionIndex,
   navigate,
 ]);
+  // Time ran out: show the TIME'S UP screen for a moment, then the results.
+  // Its own effect, so the timer is set again if the page re-mounts.
+  useEffect(() => {
+    if (status !== "time-up") return undefined;
+    timeUpRef.current = window.setTimeout(
+      () => navigate("/round2-results", { replace: true }),
+      TIME_UP_SHOW_MS
+    );
+    return () => window.clearTimeout(timeUpRef.current);
+  }, [status, navigate]);
+
   // Handle reaching an exit
   const onEndpoint = useCallback(
     (letter) => {
@@ -207,6 +245,8 @@ questionStartedAtRef.current = Date.now();
 questionResultsRef.current = [];
 resultsSavedRef.current = false;
 sessionStorage.removeItem("logicMazeResults");
+clearRound2Progress();
+setDeadline(Date.now() + ROUND_SECONDS * 1000);
 
   setQuestionIndex(0);
   

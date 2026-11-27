@@ -567,3 +567,52 @@
     align-items: flex-start;
   }
 }
+
+
+/* ---------- Round 1 / Round 2 switch ---------- */
+.admin-round-switch {
+  display: inline-flex;
+  gap: 6px;
+  margin-top: 24px;
+  padding: 6px;
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  background: var(--bg-card);
+}
+
+.admin-round-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 26px;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 1.1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.admin-round-tab:hover {
+  color: var(--text-primary);
+}
+
+.admin-round-tab.is-active {
+  background: var(--grad-neon);
+  color: #fff;
+}
+
+.admin-round-count {
+  min-width: 26px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.admin-round-tab:focus-visible {
+  outline: 2px solid var(--primary-glow);
+  outline-offset: 2px;
+}

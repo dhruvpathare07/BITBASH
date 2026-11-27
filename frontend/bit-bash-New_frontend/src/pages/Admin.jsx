@@ -2,25 +2,46 @@ import { useMemo, useState } from "react";
 import { API_BASE } from "../config";
 import "./Admin.css";
 
-const COLUMNS = [
-  { key: "rank", label: "#", sortable: false },
-  { key: "name", label: "Player", sortable: true },
-  { key: "className", label: "Class", sortable: true },
-  { key: "round1", label: "Round 1", sortable: true, num: true },
-  { key: "q1", label: "Q1", sortable: false, num: true },
-  { key: "q2", label: "Q2", sortable: false, num: true },
-  { key: "q3", label: "Q3", sortable: false, num: true },
-  { key: "round2", label: "Round 2", sortable: true, num: true },
-  { key: "total", label: "Total", sortable: true, num: true },
-  { key: "totalTime", label: "Total Time", sortable: true, num: true },
-  { key: "details", label: "", sortable: false },
-];
+// Each round has its own table (switch at the top of the panel)
+const VIEWS = {
+  round1: {
+    label: "Round 1",
+    outOf: 300,
+    scoreKey: "round1",
+    timeKey: "round1Time",
+    columns: [
+      { key: "rank", label: "#" },
+      { key: "name", label: "Player", sortable: true },
+      { key: "className", label: "Class", sortable: true },
+      { key: "q1", label: "Q1", num: true },
+      { key: "q2", label: "Q2", num: true },
+      { key: "q3", label: "Q3", num: true },
+      { key: "score", label: "Round 1", sortable: true, num: true },
+      { key: "time", label: "Time", sortable: true, num: true },
+      { key: "details", label: "" },
+    ],
+  },
+  round2: {
+    label: "Round 2",
+    outOf: 100,
+    scoreKey: "round2",
+    timeKey: "round2Time",
+    columns: [
+      { key: "rank", label: "#" },
+      { key: "name", label: "Player", sortable: true },
+      { key: "className", label: "Class", sortable: true },
+      { key: "solved", label: "Solved", num: true },
+      { key: "score", label: "Round 2", sortable: true, num: true },
+      { key: "time", label: "Time", sortable: true, num: true },
+      { key: "details", label: "" },
+    ],
+  },
+};
 
 // One Round 1 question from the saved breakdown (null if not recorded)
 const questionOf = (r, n) =>
   (r.round1Details?.questions || []).find((q) => Number(q.question) === n) || null;
 
-const TIME_KEYS = ["totalTime"];
 
 const withTotal = (r) => (r.round1 || 0) + (r.round2 || 0);
 
@@ -43,7 +64,8 @@ export default function Admin() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [authed, setAuthed] = useState(false);
-  const [sort, setSort] = useState({ key: "total", dir: "desc" });
+  const [view, setView] = useState("round1"); // which round's table is shown
+  const [sort, setSort] = useState({ key: "score", dir: "desc" });
 
   // "Clear all results" confirmation
   const [showClear, setShowClear] = useState(false);
@@ -181,42 +203,41 @@ export default function Admin() {
     setSort((s) =>
       s.key === key
         ? { key, dir: s.dir === "asc" ? "desc" : "asc" }
-        : { key, dir: key === "name" || key === "className" || TIME_KEYS.includes(key) ? "asc" : "desc" }
+        : { key, dir: key === "score" ? "desc" : "asc" }
     );
   };
 
-  const sortedRows = useMemo(() => {
+  // Everyone, for the CSV export (both rounds, best total first)
+  const sortedRows = useMemo(
+    () => (rows ? [...rows].sort((a, b) => withTotal(b) - withTotal(a)) : []),
+    [rows]
+  );
+
+  // Players who played the shown round, ranked by that round's marks
+  // (ties: less time first). Click a heading to sort differently.
+  const viewRows = useMemo(() => {
     if (!rows) return [];
-    const arr = [...rows];
+    const { scoreKey, timeKey } = VIEWS[view];
     const { key, dir } = sort;
     const factor = dir === "asc" ? 1 : -1;
-    arr.sort((a, b) => {
-      let av;
-      let bv;
-      if (TIME_KEYS.includes(key)) {
-        const at = totalTimeOf(a);
-        const bt = totalTimeOf(b);
-        if (at == null && bt == null) return 0;
-        if (at == null) return 1; // no time recorded: always at the bottom
-        if (bt == null) return -1;
-        return (at - bt) * factor;
-      }
-      if (key === "total") {
-        av = withTotal(a);
-        bv = withTotal(b);
-      } else if (key === "round1" || key === "round2") {
-        av = a[key] ?? -1;
-        bv = b[key] ?? -1;
-      } else {
-        av = (a[key] || "").toString().toLowerCase();
-        bv = (b[key] || "").toString().toLowerCase();
-      }
-      if (av < bv) return -1 * factor;
-      if (av > bv) return 1 * factor;
-      return 0;
-    });
-    return arr;
-  }, [rows, sort]);
+    const byTime = (a, b) => {
+      const at = a[timeKey];
+      const bt = b[timeKey];
+      if (at == null && bt == null) return 0;
+      if (at == null) return 1; // no time recorded: always last
+      if (bt == null) return -1;
+      return at - bt;
+    };
+    return rows
+      .filter((r) => r[scoreKey] != null)
+      .sort((a, b) => {
+        if (key === "time") return byTime(a, b) * factor || (b[scoreKey] - a[scoreKey]);
+        if (key === "score") return (a[scoreKey] - b[scoreKey]) * factor || byTime(a, b);
+        const av = (a[key] || "").toString().toLowerCase();
+        const bv = (b[key] || "").toString().toLowerCase();
+        return av < bv ? -factor : av > bv ? factor : 0;
+      });
+  }, [rows, view, sort]);
 
   const exportCSV = () => {
     const header = [
@@ -295,16 +316,81 @@ export default function Admin() {
   const arrow = (key) =>
     sort.key === key ? (sort.dir === "asc" ? " ▲" : " ▼") : "";
 
+  const current = VIEWS[view];
+
   // One table per language; rows saved before language was tracked go last
   const groups = [
-    { id: "python", title: "Python", rows: sortedRows.filter((r) => r.language === "python") },
-    { id: "c", title: "C", rows: sortedRows.filter((r) => r.language === "c") },
+    { id: "python", title: "Python", rows: viewRows.filter((r) => r.language === "python") },
+    { id: "c", title: "C", rows: viewRows.filter((r) => r.language === "c") },
     {
       id: "unknown",
       title: "Language not recorded",
-      rows: sortedRows.filter((r) => r.language !== "python" && r.language !== "c"),
+      rows: viewRows.filter((r) => r.language !== "python" && r.language !== "c"),
     },
   ].filter((g) => g.id !== "unknown" || g.rows.length > 0);
+
+  const cell = (r, key) => {
+    switch (key) {
+      case "name":
+        return (
+          <td className="player" key={key}>
+            <b>{r.name || r.username}</b>
+            {r.name && <small>@{r.username}</small>}
+          </td>
+        );
+      case "className":
+        return <td key={key}>{r.className || "—"}</td>;
+      case "q1":
+      case "q2":
+      case "q3": {
+        const q = questionOf(r, Number(key[1]));
+        return (
+          <td className="num q" key={key} title={q?.topic || undefined}>
+            <b>{q ? q.score : "—"}</b>
+            {q && (
+              <small>
+                {q.topic || "?"}
+                {q.bugsFixed ? ` · ${q.bugsFixed} bugs` : ""}
+              </small>
+            )}
+          </td>
+        );
+      }
+      case "solved":
+        return (
+          <td className="num" key={key}>
+            <b>
+              {r.round2Details?.solved != null
+                ? `${r.round2Details.solved}/${r.round2Details.totalChallenges || 10}`
+                : "—"}
+            </b>
+          </td>
+        );
+      case "score":
+        return (
+          <td className="num total" key={key}>
+            {r[current.scoreKey]}
+            <span className="of">/{current.outOf}</span>
+          </td>
+        );
+      case "time":
+        return (
+          <td className="num time" key={key}>
+            {fmtTime(r[current.timeKey]) || "—"}
+          </td>
+        );
+      case "details":
+        return (
+          <td className="num" key={key}>
+            <button type="button" className="admin-details-btn" onClick={() => setDetailsFor(r)}>
+              Details
+            </button>
+          </td>
+        );
+      default:
+        return <td key={key} />;
+    }
+  };
 
   const renderTable = (group) => (
     <section className="admin-group" key={group.id} aria-labelledby={`grp-${group.id}`}>
@@ -320,7 +406,7 @@ export default function Admin() {
         <table className="admin-table">
           <thead>
             <tr>
-              {COLUMNS.map((c) => (
+              {current.columns.map((c) => (
                 <th
                   key={c.key}
                   className={`${c.num ? "num" : ""} ${c.sortable ? "sortable" : ""}`}
@@ -335,65 +421,15 @@ export default function Admin() {
           <tbody>
             {group.rows.length === 0 && (
               <tr>
-                <td colSpan={COLUMNS.length} className="admin-empty">
-                  No {group.title} players yet.
+                <td colSpan={current.columns.length} className="admin-empty">
+                  No {group.title} players have played {current.label} yet.
                 </td>
               </tr>
             )}
             {group.rows.map((r, i) => (
               <tr key={r.username}>
                 <td className="rank">{i + 1}</td>
-                <td className="player">
-                  <b>{r.name || r.username}</b>
-                  {r.name && <small>@{r.username}</small>}
-                </td>
-                <td>{r.className || "—"}</td>
-                <td className="num">
-                  <b>{r.round1 ?? "—"}</b>
-                  {r.round1 != null && <span className="of">/300</span>}
-                  <small>{fmtTime(r.round1Time) || (r.round1 == null ? "not played" : "no time")}</small>
-                </td>
-                {[1, 2, 3].map((n) => {
-                  const q = questionOf(r, n);
-                  return (
-                    <td className="num q" key={n} title={q?.topic || undefined}>
-                      <b>{q ? q.score : "—"}</b>
-                      {q && (
-                        <small>
-                          {q.topic || "?"}
-                          {q.bugsFixed ? ` · ${q.bugsFixed} bugs` : ""}
-                        </small>
-                      )}
-                    </td>
-                  );
-                })}
-                <td className="num">
-                  <b>{r.round2 ?? "—"}</b>
-                  {r.round2 != null && <span className="of">/100</span>}
-                  <small>
-                    {r.round2 == null
-                      ? "not played"
-                      : [
-                          r.round2Details?.solved != null &&
-                            `${r.round2Details.solved}/${r.round2Details.totalChallenges || 10} solved`,
-                          fmtTime(r.round2Time),
-                        ]
-                          .filter(Boolean)
-                          .join(" · ") || "no time"}
-                  </small>
-                </td>
-                <td className="num total">
-                  {withTotal(r)}
-                  <span className="of">/400</span>
-                </td>
-                <td className="num time" title={totalTimeOf(r) == null ? "No time recorded" : undefined}>
-                  {fmtTime(totalTimeOf(r)) || "—"}
-                </td>
-                <td className="num">
-                  <button type="button" className="admin-details-btn" onClick={() => setDetailsFor(r)}>
-                    Details
-                  </button>
-                </td>
+                {current.columns.slice(1).map((c) => cell(r, c.key))}
               </tr>
             ))}
           </tbody>
@@ -461,9 +497,27 @@ export default function Admin() {
             {notice}
           </div>
         )}
+        <div className="admin-round-switch" role="tablist" aria-label="Choose a round">
+          {Object.entries(VIEWS).map(([id, v]) => (
+            <button
+              key={id}
+              type="button"
+              role="tab"
+              aria-selected={view === id}
+              className={`admin-round-tab${view === id ? " is-active" : ""}`}
+              onClick={() => setView(id)}
+            >
+              {v.label}
+              <span className="admin-round-count">
+                {rows.filter((r) => r[v.scoreKey] != null).length}
+              </span>
+            </button>
+          ))}
+        </div>
+
         <p className="admin-sub">
-          {rows.length} player{rows.length === 1 ? "" : "s"} in total. Round 1 is out of 300,
-          Round 2 out of 100. Click a column heading to sort.
+          {viewRows.length} player{viewRows.length === 1 ? "" : "s"} played {current.label} (out
+          of {current.outOf}), ranked by marks, then by time. Click a column heading to sort.
         </p>
 
         {groups.map(renderTable)}

@@ -7,6 +7,7 @@ import { C_BUGGY_CODE } from "../data/cBuggyCode"; // added
 import { API_BASE } from "../config";
 import { checkOffline } from "../utils/offlineChecker";
 import { findBugs, countFixedBugs, graceMarks } from "../utils/graceMarks";
+import AutoAdvance from "./AutoAdvance";
 
 const INDENT = "    ";
 const SERVER_TIMEOUT_MS = 4000; // then the in-browser check takes over
@@ -41,6 +42,7 @@ export default function DebugSection({
   onScoreChange,
   onGraceChange,
   onSuccess,
+  onSolved, // called the moment the question is solved (e.g. to stop the clock)
   onGiveUp,
   language = "python",
   debugPoints = 50,
@@ -124,6 +126,7 @@ export default function DebugSection({
     onScoreChange?.(100);
     recordFixed(bugs.total);
     setShowFixedModal(true);
+    onSolved?.();
   };
 
   const handleCheck = async () => {
@@ -361,9 +364,13 @@ export default function DebugSection({
               <div className="game-over-icon">🎉</div>
               <h2 className="game-over-title" id="fixed-title">Well done!</h2>
               <p>You fixed every bug in this question.</p>
-              <button className="restart-btn" onClick={() => onSuccess(progress)} autoFocus>
-                Continue
-              </button>
+              <AutoAdvance
+                label="Moving on"
+                onDone={() => onSuccess(progress)}
+                buttonText="Continue now"
+                buttonClass="restart-btn"
+                autoFocus
+              />
             </div>
           </div>
         </div>

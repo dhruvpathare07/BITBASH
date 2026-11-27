@@ -112,3 +112,38 @@ export function clearRound2Order() {
     /* storage blocked */
   }
 }
+
+/* ------------------------------------------------------------------
+   Round 2 progress, kept for the browser session so a refresh doesn't
+   restart the 30-minute clock (or the questions and score).
+   ------------------------------------------------------------------ */
+const ROUND2_PROGRESS_KEY = "bbbRound2Progress";
+
+/** Saved progress for this language, or null if Round 2 hasn't started. */
+export function loadRound2Progress(language) {
+  try {
+    const saved = JSON.parse(sessionStorage.getItem(`${ROUND2_PROGRESS_KEY}:${language}`) || "null");
+    return saved && Number.isFinite(saved.deadline) ? saved : null;
+  } catch {
+    return null;
+  }
+}
+
+export function saveRound2Progress(language, progress) {
+  try {
+    sessionStorage.setItem(`${ROUND2_PROGRESS_KEY}:${language}`, JSON.stringify(progress));
+  } catch {
+    /* storage blocked: the round still works, a refresh just restarts it */
+  }
+}
+
+/** Forget Round 2 progress (call when a new player starts). */
+export function clearRound2Progress() {
+  try {
+    for (const lang of ["python", "c"]) {
+      sessionStorage.removeItem(`${ROUND2_PROGRESS_KEY}:${lang}`);
+    }
+  } catch {
+    /* storage blocked */
+  }
+}

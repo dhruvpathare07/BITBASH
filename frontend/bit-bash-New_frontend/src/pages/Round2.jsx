@@ -1,7 +1,7 @@
 ﻿import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import './round2.css';
-import { clearRound2Order } from "../utils/shuffleRound2";
+import { clearRound2Order, loadRound2Progress } from "../utils/shuffleRound2";
 
 const STEPS = [
   { title: "Read the code", text: "Each challenge shows a short program." },
@@ -13,7 +13,15 @@ const Round2 = () => {
   const navigate = useNavigate();
 
   const handleStart = () => {
-  clearRound2Order();
+  let language = "python";
+  try {
+    const player = JSON.parse(sessionStorage.getItem("playerProfile") || "{}");
+    if (String(player.language || "").toLowerCase() === "c") language = "c";
+  } catch {
+    /* default to python */
+  }
+  // A round already under way keeps its questions and its clock
+  if (!loadRound2Progress(language)) clearRound2Order();
   navigate("/logic-maze");
 };
 

@@ -4,6 +4,7 @@ import TopicSwiper from "../../components/TopicSwiper";
 import CodeAssembler from "../../components/CodeAssembler";
 import TopicRevealCard from "../../components/TopicRevealCard";
 import Timer from "../../components/Timer";
+import TimeUpModal from "../../components/TimeUpModal";
 import ScoreBoard from "../../components/ScoreBoard";
 import DebugSection from "../../components/DebugSection";
 import { useNavigate } from "react-router-dom";
@@ -239,6 +240,7 @@ export default function Question_3() {
               topic={selectedTopic}
               onScoreChange={setDebugProgress}
               onGraceChange={setDebugGrace}
+              onSolved={() => timerRef.current?.stop()}
               debugPoints={DEBUG_POINTS}
               language="c"
               onSuccess={() => {
@@ -257,30 +259,11 @@ export default function Question_3() {
 
       {/* GAME OVER MODAL */}
       {isGameOver && (
-        <div className="game-over-overlay">
-          <div className="game-over-modal">
-            <div className="modal-glow"></div>
-            <div className="modal-content">
-              <div className="game-over-icon">⏰</div>
-              <h2 className="game-over-title">Time's up</h2>
-              <p className="game-over-text">
-                You keep the marks you've earned on this question so far.
-              </p>
-
-              <div className="final-score">
-                <span className="final-label">Marks for this question</span>
-                <span className="final-value">{totalScore}</span>
-              </div>
-
-              <button
-                className="next-question-btn"
-                onClick={() => finishQuestion()}
-              >
-                See Results
-              </button>
-            </div>
-          </div>
-        </div>
+        <TimeUpModal
+          marks={totalScore}
+          nextLabel="See Results"
+          onNext={() => finishQuestion()}
+        />
       )}
     </div>
   );

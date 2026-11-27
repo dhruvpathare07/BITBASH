@@ -618,3 +618,38 @@
   .game-screen .debug-card { right: 40px; }
   .game-screen .player-hud { display: none; }
 }
+
+/* Time's up: countdown before moving on by itself */
+.time-up-countdown {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 4px 0 20px;
+  font-size: 16px;
+  color: var(--text-secondary);
+  text-align: center;
+}
+
+.time-up-countdown b {
+  color: var(--accent-pink);
+  font-family: var(--font-code);
+}
+
+.time-up-bar {
+  height: 6px;
+  overflow: hidden;
+  border-radius: 3px;
+  background: var(--panel-sunken);
+}
+
+.time-up-bar-fill {
+  height: 100%;
+  background: var(--grad-neon);
+  transform-origin: left center;
+  animation: time-up-drain linear forwards;
+}
+
+@keyframes time-up-drain {
+  from { transform: scaleX(1); }
+  to   { transform: scaleX(0); }
+}

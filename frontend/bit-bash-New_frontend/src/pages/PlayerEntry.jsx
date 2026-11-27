@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import "./PlayerEntry.css";
 import { clearQuestionState } from "../utils/questionStage";
-import { clearRound2Order } from "../utils/shuffleRound2";
+import { clearRound2Order, clearRound2Progress } from "../utils/shuffleRound2";
 import { fetchSettings } from "../config";
 
 const avatars = [
@@ -88,6 +88,7 @@ export default function PlayerEntry() {
     // a new player draws their own Round 1 topics, with fresh clocks
     clearQuestionState();
     clearRound2Order(); // new player -> new Round 2 question/option order
+    clearRound2Progress(); // and a fresh Round 2 clock
     // TEST ONLY: Clear direct-navigation access when starting a normal game.
     sessionStorage.removeItem("bbbTestNavigation");
     // Navigate to correct language folder
