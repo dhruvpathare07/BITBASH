@@ -120,25 +120,55 @@ export default function Admin() {
   const load = async (key) => {
     setLoading(true);
     setError("");
-    try {
-      const res = await fetch(`${API_BASE}/admin/results`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ passkey: key }),
-      });
-      if (res.status === 401) {
-        setError("Wrong passkey.");
+    // A sleeping database or a fresh deploy can fail the first request,
+    // so retry a couple of times before showing an error.
+    const WAITS_MS = [0, 1500, 4000];
+    let problem = "";
+    for (const wait of WAITS_MS) {
+      if (wait) await new Promise((r) => setTimeout(r, wait));
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 15000);
+      try {
+        const res = await fetch(`${API_BASE}/admin/results`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ passkey: key }),
+          signal: controller.signal,
+        });
+        if (res.status === 401) {
+          setError("Wrong passkey.");
+          setLoading(false);
+          return;
+        }
+        if (res.status === 503) {
+          setError("Admin isn't set up on the server (ADMIN_PASSKEY is missing).");
+          setLoading(false);
+          return;
+        }
+        if (res.status === 429) {
+          setError("Too many tries. Wait a minute, then unlock again.");
+          setLoading(false);
+          return;
+        }
+        if (!res.ok) {
+          problem = `The server had a problem (error ${res.status}). Try again in a moment.`;
+          continue;
+        }
+        const data = await res.json();
+        setRows(data.results || []);
+        if (data.settings) setSettings(data.settings);
+        setAuthed(true);
         setLoading(false);
         return;
+      } catch {
+        problem = navigator.onLine === false
+          ? "This device is offline. Check the internet connection."
+          : "Could not reach the server. Check the internet connection and try again.";
+      } finally {
+        clearTimeout(timer);
       }
-      if (!res.ok) throw new Error("Request failed");
-      const data = await res.json();
-      setRows(data.results || []);
-      if (data.settings) setSettings(data.settings);
-      setAuthed(true);
-    } catch {
-      setError("Could not reach the server.");
     }
+    setError(problem);
     setLoading(false);
   };
 
